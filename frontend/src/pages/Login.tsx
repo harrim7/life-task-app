@@ -2,171 +2,176 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
-  Flex,
   FormControl,
   FormLabel,
-  Heading,
   Input,
-  Stack,
+  VStack,
+  Heading,
   Text,
-  Link as ChakraLink,
-  Alert,
-  AlertIcon,
+  Link,
+  Container,
+  FormErrorMessage,
   useToast,
-  Image,
 } from '@chakra-ui/react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+
+// This is a placeholder component for login
+// In a real implementation, this would connect to your AuthContext
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const { login } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
-    
-    try {
-      await login(email, password);
-      
-      toast({
-        title: 'Login successful',
-        description: 'Welcome back!',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      navigate('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Form validation schema
+  const validationSchema = Yup.object({
+    email: Yup.string()
+      .email('Invalid email address')
+      .required('Email is required'),
+    password: Yup.string()
+      .required('Password is required')
+  });
   
-  // For demo purposes, handle quick login
-  const handleDemoLogin = async () => {
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      email: '',
+      password: ''
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      setIsLoading(true);
+      try {
+        // This is where you would call your authentication service
+        console.log('Login attempt with:', values);
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Simulate successful login
+        toast({
+          title: 'Login successful',
+          description: 'Welcome to LifeTask AI!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true
+        });
+        
+        navigate('/dashboard');
+      } catch (error) {
+        toast({
+          title: 'Login failed',
+          description: error instanceof Error ? error.message : 'Please check your credentials',
+          status: 'error',
+          duration: 5000,
+          isClosable: true
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  });
+  
+  const handleDemoLogin = () => {
     setIsLoading(true);
     
-    try {
-      // We'll use the mock login from AuthContext
-      await login('demo@example.com', 'password');
-      
+    // Simulate API call
+    setTimeout(() => {
       toast({
         title: 'Demo Login',
         description: 'Logged in as demo user',
         status: 'success',
         duration: 3000,
-        isClosable: true,
+        isClosable: true
       });
       
-      navigate('/');
-    } catch (err) {
-      setError('Demo login failed');
-    } finally {
+      navigate('/dashboard');
       setIsLoading(false);
-    }
+    }, 1000);
   };
   
   return (
-    <Flex minH="100vh" align="center" justify="center" bg="gray.50">
-      <Stack spacing={8} mx="auto" maxW="lg" py={12} px={6} width="full">
-        <Stack align="center">
-          <Heading fontSize="4xl" color="brand.500" textAlign="center">LifeTask AI</Heading>
-          <Text fontSize="lg" color="gray.600" textAlign="center">
-            Your AI-powered task assistant
-          </Text>
-        </Stack>
-        
-        <Box
-          rounded="lg"
-          bg="white"
-          boxShadow="lg"
-          p={8}
-          width="full"
-          maxW="md"
-          mx="auto"
-        >
-          <Stack spacing={4}>
-            {error && (
-              <Alert status="error" borderRadius="md">
-                <AlertIcon />
-                {error}
-              </Alert>
-            )}
-            
-            <form onSubmit={handleSubmit}>
-              <Stack spacing={4}>
-                <FormControl id="email">
-                  <FormLabel>Email address</FormLabel>
-                  <Input 
-                    type="email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </FormControl>
-                
-                <FormControl id="password">
-                  <FormLabel>Password</FormLabel>
-                  <Input 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </FormControl>
-                
-                <Stack spacing={5}>
-                  <Stack
-                    direction={{ base: 'column', sm: 'row' }}
-                    align="start"
-                    justify="space-between"
-                  >
-                    <ChakraLink color="brand.500">Forgot password?</ChakraLink>
-                  </Stack>
-                  
-                  <Button
-                    type="submit"
-                    bg="brand.500"
-                    color="white"
-                    _hover={{ bg: 'brand.600' }}
-                    isLoading={isLoading}
-                  >
-                    Sign in
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    onClick={handleDemoLogin}
-                    isLoading={isLoading}
-                  >
-                    Try Demo
-                  </Button>
-                </Stack>
-              </Stack>
-            </form>
-            
-            <Stack pt={4}>
-              <Text align="center">
-                Don't have an account?{' '}
-                <Link to="/register">
-                  <ChakraLink color="brand.500">Register</ChakraLink>
-                </Link>
-              </Text>
-            </Stack>
-          </Stack>
-        </Box>
-      </Stack>
-    </Flex>
+    <Container maxW="md" py={{ base: 10, md: 20 }}>
+      <Box bg="white" p={8} rounded="lg" shadow="base">
+        <VStack spacing={6} align="stretch">
+          <Box textAlign="center">
+            <Heading color="brand.500" size="lg" mb={2}>Sign in to your account</Heading>
+            <Text color="gray.600" fontSize="sm">
+              Access your tasks and continue your productivity journey
+            </Text>
+          </Box>
+          
+          <form onSubmit={formik.handleSubmit}>
+            <VStack spacing={4} align="stretch">
+              <FormControl isInvalid={!!formik.errors.email && formik.touched.email}>
+                <FormLabel htmlFor="email">Email address</FormLabel>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  variant="filled"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.email}
+                />
+                <FormErrorMessage>{formik.errors.email}</FormErrorMessage>
+              </FormControl>
+              
+              <FormControl isInvalid={!!formik.errors.password && formik.touched.password}>
+                <FormLabel htmlFor="password">Password</FormLabel>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  variant="filled"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.password}
+                />
+                <FormErrorMessage>{formik.errors.password}</FormErrorMessage>
+              </FormControl>
+              
+              <Box textAlign="right">
+                <Link color="brand.500" fontSize="sm">Forgot password?</Link>
+              </Box>
+              
+              <Button 
+                type="submit" 
+                colorScheme="blue" 
+                size="lg" 
+                width="full" 
+                mt={4}
+                isLoading={isLoading}
+              >
+                Sign In
+              </Button>
+              
+              <Button
+                variant="outline"
+                colorScheme="blue"
+                size="lg"
+                width="full"
+                onClick={handleDemoLogin}
+                isLoading={isLoading}
+              >
+                Try Demo
+              </Button>
+            </VStack>
+          </form>
+          
+          <Box textAlign="center" pt={4}>
+            <Text fontSize="sm">
+              Don't have an account?{' '}
+              <Link as={RouterLink} to="/register" color="brand.500">
+                Register
+              </Link>
+            </Text>
+          </Box>
+        </VStack>
+      </Box>
+    </Container>
   );
 };
 

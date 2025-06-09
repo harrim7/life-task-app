@@ -1,40 +1,23 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import axios from 'axios';
 
 interface User {
-  _id: string;
+  id: string;
   name: string;
   email: string;
-  preferences?: {
-    theme?: string;
-    reminderFrequency?: string;
-    notificationMethods?: {
-      email?: boolean;
-      push?: boolean;
-    };
-  };
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateUserPreferences: (preferences: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -43,181 +26,173 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!token);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  
+  // Check if user is logged in when component mounts
   useEffect(() => {
-    const loadUser = async () => {
-      if (token) {
+    const checkAuth = async () => {
+      const savedToken = localStorage.getItem('token');
+      
+      if (savedToken) {
+        setIsLoading(true);
         try {
-          const response = await fetch('/api/auth/me', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (!response.ok) {
-            localStorage.removeItem('token');
-            setToken(null);
-            setIsAuthenticated(false);
-            throw new Error('Session expired, please login again');
-          }
-
-          const userData = await response.json();
-          setUser(userData);
-          setIsAuthenticated(true);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to authenticate');
-          setUser(null);
-          setIsAuthenticated(false);
+          // In a real app, you would verify the token with your backend
+          // For this demo, we'll simulate a successful verification
+          
+          // Simulate API call
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // For demo purposes, create a mock user
+          const mockUser = {
+            id: '1',
+            name: 'Demo User',
+            email: 'demo@example.com'
+          };
+          
+          setUser(mockUser);
+          setToken(savedToken);
+        } catch (error) {
+          console.error('Auth error:', error);
+          localStorage.removeItem('token');
+          setToken(null);
+        } finally {
+          setIsLoading(false);
         }
       }
-      setLoading(false);
+      
+      setIsInitialized(true);
     };
-
-    loadUser();
-  }, [token]);
-
+    
+    checkAuth();
+  }, []);
+  
+  // Login function
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    setError(null);
+    setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Invalid credentials');
+      // In a real app, you would call your API
+      // For this demo, we'll simulate a successful login for demo@example.com
+      
+      if (email === 'demo@example.com' || email === 'test@example.com') {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const mockUser = {
+          id: '1',
+          name: 'Demo User',
+          email: email
+        };
+        
+        const mockToken = 'mock-jwt-token';
+        
+        setUser(mockUser);
+        setToken(mockToken);
+        localStorage.setItem('token', mockToken);
+        
+        return;
       }
-
-      const data = await response.json();
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      setIsAuthenticated(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-      throw err;
+      
+      // For a real API call it would look something like this:
+      // const response = await axios.post('/api/auth/login', { email, password });
+      // setUser(response.data.user);
+      // setToken(response.data.token);
+      // localStorage.setItem('token', response.data.token);
+      
+      throw new Error('Invalid credentials');
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
+  
+  // Register function
   const register = async (name: string, email: string, password: string) => {
-    setLoading(true);
-    setError(null);
+    setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Registration failed');
-      }
-
-      const data = await response.json();
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      setIsAuthenticated(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
-      throw err;
+      // In a real app, you would call your API
+      // For this demo, we'll simulate a successful registration
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // For a real API call it would look something like this:
+      // const response = await axios.post('/api/auth/register', { name, email, password });
+      // setUser(response.data.user);
+      // setToken(response.data.token);
+      // localStorage.setItem('token', response.data.token);
+      
+      // Instead, let's just simulate a successful registration
+      const mockUser = {
+        id: '2',
+        name,
+        email
+      };
+      
+      const mockToken = 'mock-jwt-token';
+      
+      setUser(mockUser);
+      setToken(mockToken);
+      localStorage.setItem('token', mockToken);
+    } catch (error) {
+      console.error('Register error:', error);
+      throw error;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
+  
+  // Logout function
   const logout = () => {
     localStorage.removeItem('token');
-    setToken(null);
     setUser(null);
-    setIsAuthenticated(false);
+    setToken(null);
   };
-
-  const updateUserPreferences = async (preferences: any) => {
-    if (!user) throw new Error('Not authenticated');
-    
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/auth/preferences', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ preferences }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update preferences');
-      }
-
-      const updatedUser = await response.json();
-      setUser(updatedUser);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update preferences');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // For demo purposes, we'll add a mock login since we don't have a real auth backend yet
-  const mockLogin = () => {
-    const mockUser: User = {
-      _id: '64f78d9e1d41c82b3d6c80a1',
-      name: 'Demo User',
-      email: 'demo@example.com',
-      preferences: {
-        theme: 'light',
-        reminderFrequency: 'daily',
-        notificationMethods: {
-          email: true,
-          push: false
-        }
-      }
-    };
-    
-    const mockToken = 'mock-token-12345';
-    localStorage.setItem('token', mockToken);
-    setToken(mockToken);
-    setUser(mockUser);
-    setIsAuthenticated(true);
-    setLoading(false);
-  };
-
-  // Initialize with mock user for demo
+  
+  // Set up axios interceptor for authentication
   useEffect(() => {
-    // In a real app, we'd check for a token and validate it
-    // For demo, we'll just set a mock user
-    if (!user && !loading) {
-      mockLogin();
-    }
-  }, [user, loading]);
-
+    const interceptor = axios.interceptors.request.use(
+      config => {
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      error => Promise.reject(error)
+    );
+    
+    return () => {
+      axios.interceptors.request.eject(interceptor);
+    };
+  }, [token]);
+  
+  // Context value
   const value = {
     user,
     token,
-    isAuthenticated,
-    loading,
-    error,
+    isAuthenticated: !!user,
+    isLoading,
     login,
     register,
-    logout,
-    updateUserPreferences,
+    logout
   };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  
+  return (
+    <AuthContext.Provider value={value}>
+      {isInitialized ? children : <div>Loading...</div>}
+    </AuthContext.Provider>
+  );
 };
+
+// Custom hook to use auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthContext;

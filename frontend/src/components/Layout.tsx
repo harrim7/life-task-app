@@ -1,24 +1,29 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
-import Sidebar from './Sidebar';
 import Header from './Header';
+import Sidebar from './Sidebar';
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
+  showSidebar?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, showSidebar = true }) => {
+  // This is a placeholder for auth state, which would come from context
+  const isLoggedIn = true; // For demonstration purposes
+  
   return (
-    <Flex h="100vh" overflow="hidden">
-      <Sidebar />
-      <Flex flexDirection="column" flex="1" overflow="hidden">
-        <Header />
-        <Box
-          flex="1"
-          p={4}
-          overflowY="auto"
-          bg="gray.50"
-        >
+    <Flex direction="column" minH="100vh">
+      <Header isLoggedIn={isLoggedIn} />
+      
+      <Flex flex="1">
+        {showSidebar && isLoggedIn && (
+          <Box w="250px" bg="white" p={4} shadow="sm">
+            <Sidebar />
+          </Box>
+        )}
+        
+        <Box flex="1" p={4}>
           {children}
         </Box>
       </Flex>

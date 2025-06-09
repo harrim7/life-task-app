@@ -1,160 +1,142 @@
 import React from 'react';
-import { Box, Text, Badge, Flex, IconButton, Progress, Tooltip } from '@chakra-ui/react';
-import { FiEdit, FiTrash2, FiCheckCircle } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
-
-interface SubTask {
-  _id: string;
-  title: string;
-  completed: boolean;
-}
+import { 
+  Box, 
+  Text, 
+  Heading, 
+  Flex, 
+  Badge, 
+  Progress,
+  Icon,
+} from '@chakra-ui/react';
+import { FiCheck, FiCalendar, FiFolder } from 'react-icons/fi';
+import { Link as RouterLink } from 'react-router-dom';
+import { Task } from '../context/TaskContext';
 
 interface TaskCardProps {
-  task: {
-    _id: string;
-    title: string;
-    description?: string;
-    status: 'not_started' | 'in_progress' | 'completed' | 'deferred';
-    priority: 'low' | 'medium' | 'high';
-    dueDate?: Date;
-    category: string;
-    subtasks?: SubTask[];
-  };
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onComplete: (id: string) => void;
+  task: Task;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onComplete }) => {
-  // Calculate completion percentage based on subtasks
-  const getCompletionPercentage = () => {
-    if (!task.subtasks || task.subtasks.length === 0) return 0;
-    const completedCount = task.subtasks.filter(subtask => subtask.completed).length;
-    return Math.round((completedCount / task.subtasks.length) * 100);
-  };
-
-  // Format date to more readable format
-  const formatDate = (date?: Date) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
+  // Format date for display
+  const formatDate = (date: Date | undefined) => {
     if (!date) return 'No due date';
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(date).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric'
     });
   };
-
-  // Get appropriate color for priority badge
+  
+  // Get badge color based on priority
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'red';
-      case 'medium': return 'orange';
-      case 'low': return 'green';
-      default: return 'gray';
+      case 'high':
+        return 'red';
+      case 'medium':
+        return 'orange';
+      case 'low':
+        return 'green';
+      default:
+        return 'gray';
     }
+  };
+  
+  // Get badge color based on status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'green';
+      case 'in_progress':
+        return 'blue';
+      case 'not_started':
+        return 'gray';
+      case 'deferred':
+        return 'purple';
+      default:
+        return 'gray';
+    }
+  };
+  
+  // Calculate progress for a task
+  const calculateProgress = (task: Task) => {
+    if (task.subtasks.length === 0) return 0;
+    const completedSubtasks = task.subtasks.filter(st => st.completed).length;
+    return Math.round((completedSubtasks / task.subtasks.length) * 100);
   };
 
   return (
-    <Box
-      borderWidth="1px"
-      borderRadius="lg"
-      overflow="hidden"
-      boxShadow="sm"
+    <Box 
+      as={RouterLink}
+      to={`/tasks/${task._id}`}
       bg="white"
-      transition="all 0.3s"
-      _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
+      p={5}
+      borderRadius="lg"
+      shadow="sm"
+      transition="all 0.2s"
+      _hover={{
+        transform: 'translateY(-4px)',
+        shadow: 'md',
+        textDecoration: 'none'
+      }}
+      borderLeft="4px solid"
+      borderLeftColor={`${getPriorityColor(task.priority)}.400`}
     >
-      <Box p={4}>
-        <Flex justifyContent="space-between" alignItems="flex-start">
-          <Link to={`/tasks/${task._id}`}>
-            <Text fontWeight="bold" fontSize="lg" mb={2} noOfLines={1}>
-              {task.title}
+      <Flex justify="space-between" mb={2}>
+        <Badge colorScheme={getStatusColor(task.status)}>
+          {task.status === 'not_started' 
+            ? 'Not Started' 
+            : task.status === 'in_progress' 
+            ? 'In Progress' 
+            : task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+        </Badge>
+        <Badge colorScheme={getPriorityColor(task.priority)}>
+          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority
+        </Badge>
+      </Flex>
+      
+      <Heading as="h3" size="md" mb={2} noOfLines={1}>
+        {task.title}
+      </Heading>
+      
+      {task.description && (
+        <Text fontSize="sm" color="gray.600" noOfLines={2} mb={3}>
+          {task.description}
+        </Text>
+      )}
+      
+      {task.subtasks.length > 0 && (
+        <>
+          <Progress 
+            value={calculateProgress(task)} 
+            size="xs" 
+            colorScheme="blue" 
+            mb={2} 
+          />
+          <Flex justify="space-between" fontSize="xs" color="gray.500">
+            <Text>{calculateProgress(task)}% complete</Text>
+            <Text>
+              {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length} subtasks
             </Text>
-          </Link>
-
-          <Flex>
-            <Tooltip label="Edit task">
-              <IconButton
-                aria-label="Edit task"
-                icon={<FiEdit />}
-                size="sm"
-                variant="ghost"
-                colorScheme="blue"
-                mr={1}
-                onClick={() => onEdit(task._id)}
-              />
-            </Tooltip>
-            <Tooltip label="Delete task">
-              <IconButton
-                aria-label="Delete task"
-                icon={<FiTrash2 />}
-                size="sm"
-                variant="ghost"
-                colorScheme="red"
-                mr={1}
-                onClick={() => onDelete(task._id)}
-              />
-            </Tooltip>
-            {task.status !== 'completed' && (
-              <Tooltip label="Mark as complete">
-                <IconButton
-                  aria-label="Mark as complete"
-                  icon={<FiCheckCircle />}
-                  size="sm"
-                  variant="ghost"
-                  colorScheme="green"
-                  onClick={() => onComplete(task._id)}
-                />
-              </Tooltip>
-            )}
           </Flex>
+        </>
+      )}
+      
+      <Flex mt={4} fontSize="sm" color="gray.500" justify="space-between" wrap="wrap">
+        <Flex align="center" mr={2}>
+          <Icon as={FiCalendar} mr={1} />
+          <Text>{formatDate(task.dueDate)}</Text>
         </Flex>
-
-        {task.description && (
-          <Text fontSize="sm" color="gray.600" noOfLines={2} mb={3}>
-            {task.description}
-          </Text>
+        
+        <Flex align="center">
+          <Icon as={FiFolder} mr={1} />
+          <Text textTransform="capitalize">{task.category}</Text>
+        </Flex>
+        
+        {task.status === 'completed' && (
+          <Badge colorScheme="green" display="flex" alignItems="center" mt={{ base: 2, md: 0 }}>
+            <Icon as={FiCheck} mr={1} /> Completed
+          </Badge>
         )}
-
-        <Flex mt={2} mb={3} justifyContent="space-between" alignItems="center">
-          <Badge colorScheme={getPriorityColor(task.priority)} mr={2}>
-            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-          </Badge>
-
-          <Text fontSize="xs" color="gray.500">
-            Due: {formatDate(task.dueDate)}
-          </Text>
-        </Flex>
-
-        {task.subtasks && task.subtasks.length > 0 && (
-          <Box mt={3}>
-            <Flex justifyContent="space-between" alignItems="center" mb={1}>
-              <Text fontSize="xs" fontWeight="medium" color="gray.600">
-                Progress
-              </Text>
-              <Text fontSize="xs" color="gray.600">
-                {getCompletionPercentage()}%
-              </Text>
-            </Flex>
-            <Progress
-              value={getCompletionPercentage()}
-              size="sm"
-              colorScheme="green"
-              borderRadius="full"
-            />
-          </Box>
-        )}
-
-        <Flex mt={3} justifyContent="space-between" alignItems="center">
-          <Badge colorScheme="purple" variant="outline">
-            {task.category}
-          </Badge>
-          <Badge
-            colorScheme={task.status === 'completed' ? 'green' : task.status === 'in_progress' ? 'blue' : task.status === 'deferred' ? 'gray' : 'yellow'}
-          >
-            {task.status.replace('_', ' ')}
-          </Badge>
-        </Flex>
-      </Box>
+      </Flex>
     </Box>
   );
 };

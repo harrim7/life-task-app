@@ -11,11 +11,8 @@ exports.createTask = async (req, res) => {
       return res.status(400).json({ error: 'Task title is required' });
     }
     
-    // For demo purposes, hardcoding a user ID. In a real app, this would come from authentication
-    const userId = '64f78d9e1d41c82b3d6c80a1';
-    
     const task = new Task({
-      user: userId,
+      user: req.user._id,
       title,
       description,
       category,
@@ -37,11 +34,8 @@ exports.createTask = async (req, res) => {
  */
 exports.getTasks = async (req, res) => {
   try {
-    // For demo purposes, hardcoding a user ID. In a real app, this would come from authentication
-    const userId = '64f78d9e1d41c82b3d6c80a1';
-    
     const { category, status, priority } = req.query;
-    const query = { user: userId };
+    const query = { user: req.user._id };
     
     if (category) query.category = category;
     if (status) query.status = status;
@@ -66,10 +60,8 @@ exports.getTaskById = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     
-    // For demo purposes, hardcoding a user ID. In a real app, this would come from authentication
-    const userId = '64f78d9e1d41c82b3d6c80a1';
-    
-    if (task.user.toString() !== userId) {
+    // Check task belongs to authenticated user
+    if (task.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to access this task' });
     }
     
@@ -92,10 +84,8 @@ exports.updateTask = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     
-    // For demo purposes, hardcoding a user ID. In a real app, this would come from authentication
-    const userId = '64f78d9e1d41c82b3d6c80a1';
-    
-    if (task.user.toString() !== userId) {
+    // Check task belongs to authenticated user
+    if (task.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to update this task' });
     }
     
@@ -134,10 +124,8 @@ exports.deleteTask = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     
-    // For demo purposes, hardcoding a user ID. In a real app, this would come from authentication
-    const userId = '64f78d9e1d41c82b3d6c80a1';
-    
-    if (task.user.toString() !== userId) {
+    // Check task belongs to authenticated user
+    if (task.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to delete this task' });
     }
     
@@ -166,10 +154,8 @@ exports.addSubtask = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     
-    // For demo purposes, hardcoding a user ID. In a real app, this would come from authentication
-    const userId = '64f78d9e1d41c82b3d6c80a1';
-    
-    if (task.user.toString() !== userId) {
+    // Check task belongs to authenticated user
+    if (task.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to modify this task' });
     }
     
@@ -203,10 +189,8 @@ exports.updateSubtask = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     
-    // For demo purposes, hardcoding a user ID. In a real app, this would come from authentication
-    const userId = '64f78d9e1d41c82b3d6c80a1';
-    
-    if (task.user.toString() !== userId) {
+    // Check task belongs to authenticated user
+    if (task.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to modify this task' });
     }
     
@@ -249,10 +233,8 @@ exports.deleteSubtask = async (req, res) => {
       return res.status(404).json({ error: 'Task not found' });
     }
     
-    // For demo purposes, hardcoding a user ID. In a real app, this would come from authentication
-    const userId = '64f78d9e1d41c82b3d6c80a1';
-    
-    if (task.user.toString() !== userId) {
+    // Check task belongs to authenticated user
+    if (task.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Not authorized to modify this task' });
     }
     
@@ -265,7 +247,7 @@ exports.deleteSubtask = async (req, res) => {
     subtask.deleteOne();
     await task.save();
     
-    res.status(200).json({ message: 'Subtask deleted successfully' });
+    res.status(200).json(task);
   } catch (error) {
     console.error('Error deleting subtask:', error);
     res.status(500).json({ error: 'Failed to delete subtask' });

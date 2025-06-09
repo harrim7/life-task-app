@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const taskRoutes = require('./routes/taskRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
@@ -14,40 +15,18 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/ai', aiRoutes);
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
+  // Set static folder - now serving the React build
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
-  // Specific routes for static HTML pages
-  app.get('/login', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build', 'login.html'));
-  });
-
-  app.get('/register', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build', 'register.html'));
-  });
-
-  // Dashboard and task-related routes
-  app.get('/dashboard', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build', 'dashboard.html'));
-  });
-  
-  app.get('/tasks/*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build', 'dashboard.html'));
-  });
-
-  // Home page
-  app.get('/', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
-  });
-  
-  // All other routes go to index.html
+  // All routes not matching API routes should be handled by React Router
   app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
+    res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
   });
 }
 

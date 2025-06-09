@@ -28,45 +28,24 @@ import {
   Tooltip,
   Progress,
 } from '@chakra-ui/react';
-import { FiArrowLeft, FiPlus, FiTrash2, FiEdit, FiCheckCircle, FiAward, FiCalendar, FiInfo } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiTrash2, FiEdit, FiCheckCircle, FiAward, FiCalendar, FiInfo, FiCpu } from 'react-icons/fi';
 import { useNavigate, useParams } from 'react-router-dom';
 
 // Hooks
-import { useTasks } from '../context/TaskContext';
-
-interface SubTask {
-  _id: string;
-  title: string;
-  description?: string;
-  completed: boolean;
-  dueDate?: Date;
-  priority: 'low' | 'medium' | 'high';
-  notes?: string;
-  resources?: string[];
-  completedAt?: Date;
-}
-
-interface Task {
-  _id: string;
-  title: string;
-  description?: string;
-  category: string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'deferred';
-  priority: 'low' | 'medium' | 'high';
-  dueDate?: Date;
-  reminderDates?: Date[];
-  subtasks: SubTask[];
-  notes?: string;
-  attachments?: string[];
-  aiGenerated?: boolean;
-  completedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { useTask, Task, Subtask } from '../context/TaskContext';
 
 const TaskDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getTaskById, updateTask, deleteTask, addSubtask, updateSubtask, deleteSubtask } = useTasks();
+  const { 
+    getTask, 
+    updateTask, 
+    deleteTask, 
+    addSubtask, 
+    updateSubtask, 
+    deleteSubtask,
+    breakdownTask,
+    generateSuggestions 
+  } = useTask();
   const navigate = useNavigate();
   const toast = useToast();
   
@@ -89,24 +68,26 @@ const TaskDetail: React.FC = () => {
   useEffect(() => {
     const loadTask = async () => {
       if (!id) return;
+      setLoading(true);
+      setError(null);
       
       try {
-        const taskData = await getTaskById(id);
-        if (taskData) {
-          setTask(taskData);
-          setEditedTask({
-            title: taskData.title,
-            description: taskData.description,
-            category: taskData.category,
-            priority: taskData.priority,
-            status: taskData.status,
-            dueDate: taskData.dueDate,
-          });
-        }
-      } catch (error) {
+        const taskData = await getTask(id);
+        setTask(taskData);
+        setEditedTask({
+          title: taskData.title,
+          description: taskData.description,
+          category: taskData.category,
+          priority: taskData.priority,
+          status: taskData.status,
+          dueDate: taskData.dueDate,
+        });
+      } catch (err) {
+        console.error('Failed to load task:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load task details');
         toast({
           title: 'Error loading task',
-          description: error instanceof Error ? error.message : 'Unknown error',
+          description: err instanceof Error ? err.message : 'Unknown error',
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -117,7 +98,7 @@ const TaskDetail: React.FC = () => {
     };
     
     loadTask();
-  }, [id, getTaskById, toast]);
+  }, [id, getTask, toast]);
   
   const handleEditToggle = () => {
     if (editMode && task) {
@@ -220,35 +201,7 @@ const TaskDetail: React.FC = () => {
     }
   };
   
-  const openEditSubtask = (subtask: SubTask, index: number) => {
-    setEditingSubtask({ subtask: { ...subtask }, index });
-    onEditSubtaskOpen();
-  };
   
-  const handleUpdateSubtask = async () => {
-    if (!id || !task || !editingSubtask || !editingSubtask.subtask._id) return;
-    
-    try {
-      const updatedTask = await updateSubtask(id, editingSubtask.subtask._id, editingSubtask.subtask);
-      setTask(updatedTask);
-      onEditSubtaskClose();
-      
-      toast({
-        title: 'Subtask updated',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: 'Failed to update subtask',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
   
   const handleDeleteSubtask = async (subtaskId: string) => {
     if (!id) return;
@@ -324,18 +277,8 @@ const TaskDetail: React.FC = () => {
     onSuggestionsOpen();
     
     try {
-      const response = await fetch('/api/ai/suggestions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ task }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to get suggestions');
-      
-      const data = await response.json();
-      setSuggestions(data.suggestions);
+      const result = await generateSuggestions(task._id);
+      setSuggestions(result);
     } catch (error) {
       toast({
         title: 'Failed to get suggestions',
@@ -347,6 +290,87 @@ const TaskDetail: React.FC = () => {
       setSuggestions('Unable to generate suggestions at this time.');
     } finally {
       setLoadingSuggestions(false);
+    }
+  };
+  
+  // Form validation schema for subtask
+  const subtaskValidationSchema = Yup.object({
+    title: Yup.string().required('Title is required').min(3, 'Title must be at least 3 characters'),
+    description: Yup.string(),
+    priority: Yup.string().required('Priority is required'),
+    dueDate: Yup.date().nullable()
+  });
+  
+  // Formik for subtask
+  const subtaskFormik = useFormik({
+    initialValues: {
+      title: '',
+      description: '',
+      priority: 'medium',
+      dueDate: null as Date | null,
+    },
+    validationSchema: subtaskValidationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      if (!task || !id) return;
+      
+      try {
+        const newSubtaskData = {
+          title: values.title,
+          description: values.description,
+          priority: values.priority as 'low' | 'medium' | 'high',
+          dueDate: values.dueDate || undefined
+        };
+        
+        const updatedTask = await addSubtask(id, newSubtaskData);
+        setTask(updatedTask);
+        
+        toast({
+          title: 'Subtask added',
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        });
+        
+        resetForm();
+        onClose();
+      } catch (err) {
+        toast({
+          title: 'Error',
+          description: err instanceof Error ? err.message : 'Failed to add subtask',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    }
+  });
+
+  // Handle AI task breakdown
+  const handleBreakdownTask = async () => {
+    if (!task) return;
+    
+    setIsBreakingDown(true);
+    
+    try {
+      const updatedTask = await breakdownTask(task._id);
+      setTask(updatedTask);
+      toast({
+        title: 'Task broken down successfully',
+        description: 'AI has created subtasks for your task',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Failed to break down task',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsBreakingDown(false);
     }
   };
   
@@ -419,7 +443,7 @@ const TaskDetail: React.FC = () => {
           onClick={() => navigate('/')}
         />
         <Heading size="lg" flex="1">
-          {editMode ? (
+          {isEditing ? (
             <Input 
               name="title"
               value={editedTask.title || ''}
@@ -440,7 +464,7 @@ const TaskDetail: React.FC = () => {
           >
             Get Help
           </Button>
-          {editMode ? (
+          {isEditing ? (
             <>
               <Button colorScheme="green" mr={2} onClick={handleSaveTask}>
                 Save
@@ -453,7 +477,7 @@ const TaskDetail: React.FC = () => {
             <>
               <Button 
                 leftIcon={<FiEdit />} 
-                colorScheme="brand" 
+                colorScheme="blue" 
                 mr={2}
                 onClick={handleEditToggle}
               >
@@ -611,9 +635,26 @@ const TaskDetail: React.FC = () => {
       <Box bg="white" p={6} borderRadius="md" boxShadow="sm">
         <Flex justify="space-between" align="center" mb={4}>
           <Heading size="md">Subtasks</Heading>
-          <Button leftIcon={<FiPlus />} colorScheme="brand" size="sm" onClick={onAddSubtaskOpen}>
-            Add Subtask
-          </Button>
+          <HStack>
+            {task.subtasks.length === 0 && (
+              <Button 
+                leftIcon={<FiCpu />} 
+                colorScheme="purple" 
+                size="sm"
+                onClick={handleBreakdownTask}
+              >
+                AI Breakdown
+              </Button>
+            )}
+            <Button 
+              leftIcon={<FiPlus />} 
+              colorScheme="blue" 
+              size="sm" 
+              onClick={onAddSubtaskOpen}
+            >
+              Add Subtask
+            </Button>
+          </HStack>
         </Flex>
         
         {task.subtasks && task.subtasks.length > 0 ? (
@@ -754,10 +795,15 @@ const TaskDetail: React.FC = () => {
           </ModalBody>
           
           <ModalFooter>
-            <Button variant="outline" mr={3} onClick={onAddSubtaskClose}>
+            <Button variant="outline" mr={3} onClick={onClose}>
               Cancel
             </Button>
-            <Button colorScheme="brand" onClick={handleAddSubtask}>
+            <Button 
+              colorScheme="blue" 
+              type="submit"
+              form="add-subtask-form"
+              isLoading={subtaskFormik.isSubmitting}
+            >
               Add Subtask
             </Button>
           </ModalFooter>

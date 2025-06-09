@@ -2,164 +2,212 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
-  Flex,
   FormControl,
   FormLabel,
-  Heading,
   Input,
-  Stack,
+  VStack,
+  Heading,
   Text,
-  Link as ChakraLink,
-  Alert,
-  AlertIcon,
+  Link,
+  Container,
+  FormErrorMessage,
   useToast,
-  FormHelperText,
+  InputGroup,
+  InputRightElement,
+  IconButton,
 } from '@chakra-ui/react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import Header from '../components/Header';
 
 const Register: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const { register } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  const { register } = useAuth();
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    
-    // Validate inputs
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
+  // Form validation schema
+  const validationSchema = Yup.object({
+    name: Yup.string()
+      .required('Full name is required')
+      .min(2, 'Name must be at least 2 characters'),
+    email: Yup.string()
+      .email('Invalid email address')
+      .required('Email is required'),
+    password: Yup.string()
+      .required('Password is required')
+      .min(6, 'Password must be at least 6 characters'),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('password')], 'Passwords must match')
+      .required('Please confirm your password')
+  });
+  
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      setIsLoading(true);
+      try {
+        await register(values.name, values.email, values.password);
+        
+        toast({
+          title: 'Account created',
+          description: 'You have successfully registered!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true
+        });
+        
+        navigate('/dashboard');
+      } catch (error) {
+        toast({
+          title: 'Registration failed',
+          description: error instanceof Error ? error.message : 'Please try again',
+          status: 'error',
+          duration: 5000,
+          isClosable: true
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      await register(name, email, password);
-      
-      toast({
-        title: 'Account created',
-        description: 'You have successfully registered!',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-      
-      navigate('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  });
+  
+  const togglePassword = () => setShowPassword(!showPassword);
+  const toggleConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
   
   return (
-    <Flex minH="100vh" align="center" justify="center" bg="gray.50">
-      <Stack spacing={8} mx="auto" maxW="lg" py={12} px={6} width="full">
-        <Stack align="center">
-          <Heading fontSize="4xl" color="brand.500" textAlign="center">Create an Account</Heading>
-          <Text fontSize="lg" color="gray.600" textAlign="center">
-            Join LifeTask AI and boost your productivity
-          </Text>
-        </Stack>
-        
-        <Box
-          rounded="lg"
-          bg="white"
-          boxShadow="lg"
-          p={8}
-          width="full"
-          maxW="md"
-          mx="auto"
-        >
-          <Stack spacing={4}>
-            {error && (
-              <Alert status="error" borderRadius="md">
-                <AlertIcon />
-                {error}
-              </Alert>
-            )}
+    <Box>
+      <Header />
+      <Container maxW="md" py={{ base: 10, md: 20 }}>
+        <Box bg="white" p={8} rounded="lg" shadow="base">
+          <VStack spacing={6} align="stretch">
+            <Box textAlign="center">
+              <Heading color="brand.500" size="lg" mb={2}>Create an Account</Heading>
+              <Text color="gray.600" fontSize="sm">
+                Join LifeTask AI and boost your productivity
+              </Text>
+            </Box>
             
-            <form onSubmit={handleSubmit}>
-              <Stack spacing={4}>
-                <FormControl id="name" isRequired>
-                  <FormLabel>Full Name</FormLabel>
-                  <Input 
-                    type="text" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+            <form onSubmit={formik.handleSubmit}>
+              <VStack spacing={4} align="stretch">
+                <FormControl isInvalid={!!formik.errors.name && formik.touched.name}>
+                  <FormLabel htmlFor="name">Full Name</FormLabel>
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    variant="filled"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.name}
                   />
+                  <FormErrorMessage>{formik.errors.name}</FormErrorMessage>
                 </FormControl>
                 
-                <FormControl id="email" isRequired>
-                  <FormLabel>Email address</FormLabel>
-                  <Input 
-                    type="email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                <FormControl isInvalid={!!formik.errors.email && formik.touched.email}>
+                  <FormLabel htmlFor="email">Email address</FormLabel>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    variant="filled"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.email}
                   />
-                  <FormHelperText>We'll never share your email.</FormHelperText>
+                  <FormErrorMessage>{formik.errors.email}</FormErrorMessage>
                 </FormControl>
                 
-                <FormControl id="password" isRequired>
-                  <FormLabel>Password</FormLabel>
-                  <Input 
-                    type="password" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <FormHelperText>At least 6 characters long.</FormHelperText>
+                <FormControl isInvalid={!!formik.errors.password && formik.touched.password}>
+                  <FormLabel htmlFor="password">Password</FormLabel>
+                  <InputGroup>
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      variant="filled"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.password}
+                    />
+                    <InputRightElement>
+                      <IconButton
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        icon={showPassword ? <FiEyeOff /> : <FiEye />}
+                        variant="ghost"
+                        onClick={togglePassword}
+                        size="sm"
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                  <FormErrorMessage>{formik.errors.password}</FormErrorMessage>
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    At least 6 characters long
+                  </Text>
                 </FormControl>
                 
-                <FormControl id="confirm-password" isRequired>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <Input 
-                    type="password" 
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
+                <FormControl isInvalid={!!formik.errors.confirmPassword && formik.touched.confirmPassword}>
+                  <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
+                  <InputGroup>
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      variant="filled"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.confirmPassword}
+                    />
+                    <InputRightElement>
+                      <IconButton
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                        icon={showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                        variant="ghost"
+                        onClick={toggleConfirmPassword}
+                        size="sm"
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                  <FormErrorMessage>{formik.errors.confirmPassword}</FormErrorMessage>
                 </FormControl>
                 
-                <Stack spacing={10} pt={2}>
-                  <Button
-                    type="submit"
-                    size="lg"
-                    bg="brand.500"
-                    color="white"
-                    _hover={{ bg: 'brand.600' }}
-                    isLoading={isLoading}
-                  >
-                    Sign up
-                  </Button>
-                </Stack>
-              </Stack>
+                <Button 
+                  type="submit" 
+                  colorScheme="blue" 
+                  size="lg" 
+                  width="full" 
+                  mt={4}
+                  isLoading={isLoading}
+                >
+                  Create Account
+                </Button>
+              </VStack>
             </form>
             
-            <Stack pt={6}>
-              <Text align="center">
-                Already a user?{' '}
-                <Link to="/login">
-                  <ChakraLink color="brand.500">Login</ChakraLink>
+            <Box textAlign="center" pt={4}>
+              <Text fontSize="sm">
+                Already have an account?{' '}
+                <Link as={RouterLink} to="/login" color="brand.500">
+                  Login
                 </Link>
               </Text>
-            </Stack>
-          </Stack>
+            </Box>
+          </VStack>
         </Box>
-      </Stack>
-    </Flex>
+      </Container>
+    </Box>
   );
 };
 

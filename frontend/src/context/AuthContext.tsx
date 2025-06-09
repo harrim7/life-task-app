@@ -37,21 +37,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (savedToken) {
         setIsLoading(true);
         try {
-          // In a real app, you would verify the token with your backend
-          // For this demo, we'll simulate a successful verification
-          
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // For demo purposes, create a mock user
-          const mockUser = {
-            id: '1',
-            name: 'Demo User',
-            email: 'demo@example.com'
-          };
-          
-          setUser(mockUser);
-          setToken(savedToken);
+          try {
+            // Verify the token with the backend
+            const response = await axios.get('/api/auth/verify', {
+              headers: {
+                Authorization: `Bearer ${savedToken}`
+              }
+            });
+            
+            setUser(response.data.user);
+            setToken(savedToken);
+          } catch (apiError) {
+            console.error('API auth error:', apiError);
+            
+            // Fallback for development
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Using mock auth for development');
+              
+              // Simulate API call
+              await new Promise(resolve => setTimeout(resolve, 300));
+              
+              // For dev purposes, create a mock user
+              const mockUser = {
+                id: '1',
+                name: 'Demo User',
+                email: 'demo@example.com'
+              };
+              
+              setUser(mockUser);
+              setToken(savedToken);
+            } else {
+              // In production, clear token on verification error
+              localStorage.removeItem('token');
+              setToken(null);
+            }
+          }
         } catch (error) {
           console.error('Auth error:', error);
           localStorage.removeItem('token');
@@ -71,35 +91,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // In a real app, you would call your API
-      // For this demo, we'll simulate a successful login for demo@example.com
-      
-      if (email === 'demo@example.com' || email === 'test@example.com') {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        const response = await axios.post('/api/auth/login', { email, password });
+        const { user, token } = response.data;
         
-        const mockUser = {
-          id: '1',
-          name: 'Demo User',
-          email: email
-        };
-        
-        const mockToken = 'mock-jwt-token';
-        
-        setUser(mockUser);
-        setToken(mockToken);
-        localStorage.setItem('token', mockToken);
-        
+        setUser(user);
+        setToken(token);
+        localStorage.setItem('token', token);
         return;
+      } catch (apiError) {
+        console.error('API login error:', apiError);
+        
+        // Fallback for development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Using mock auth for development');
+          
+          if (email === 'demo@example.com' || email === 'test@example.com') {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const mockUser = {
+              id: '1',
+              name: 'Demo User',
+              email: email
+            };
+            
+            const mockToken = 'mock-jwt-token';
+            
+            setUser(mockUser);
+            setToken(mockToken);
+            localStorage.setItem('token', mockToken);
+            
+            return;
+          }
+        }
+        
+        throw new Error('Invalid credentials');
       }
-      
-      // For a real API call it would look something like this:
-      // const response = await axios.post('/api/auth/login', { email, password });
-      // setUser(response.data.user);
-      // setToken(response.data.token);
-      // localStorage.setItem('token', response.data.token);
-      
-      throw new Error('Invalid credentials');
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -112,30 +140,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
-      // In a real app, you would call your API
-      // For this demo, we'll simulate a successful registration
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For a real API call it would look something like this:
-      // const response = await axios.post('/api/auth/register', { name, email, password });
-      // setUser(response.data.user);
-      // setToken(response.data.token);
-      // localStorage.setItem('token', response.data.token);
-      
-      // Instead, let's just simulate a successful registration
-      const mockUser = {
-        id: '2',
-        name,
-        email
-      };
-      
-      const mockToken = 'mock-jwt-token';
-      
-      setUser(mockUser);
-      setToken(mockToken);
-      localStorage.setItem('token', mockToken);
+      try {
+        const response = await axios.post('/api/auth/register', { name, email, password });
+        const { user, token } = response.data;
+        
+        setUser(user);
+        setToken(token);
+        localStorage.setItem('token', token);
+        return;
+      } catch (apiError) {
+        console.error('API register error:', apiError);
+        
+        // Fallback for development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Using mock auth for development');
+          
+          // Simulate API call
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Simulate a successful registration
+          const mockUser = {
+            id: '2',
+            name,
+            email
+          };
+          
+          const mockToken = 'mock-jwt-token';
+          
+          setUser(mockUser);
+          setToken(mockToken);
+          localStorage.setItem('token', mockToken);
+          return;
+        }
+        
+        throw apiError;
+      }
     } catch (error) {
       console.error('Register error:', error);
       throw error;

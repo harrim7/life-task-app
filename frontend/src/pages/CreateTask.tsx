@@ -2,444 +2,278 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
-  Flex,
   FormControl,
   FormLabel,
-  Heading,
   Input,
-  Select,
   Textarea,
+  Select,
   VStack,
+  Heading,
   useToast,
-  Divider,
-  Text,
-  SimpleGrid,
-  Spinner,
-  Badge,
-  HStack,
+  FormErrorMessage,
+  Flex,
   Switch,
-  IconButton,
-  FormHelperText,
+  HStack,
+  Text,
+  Divider,
+  Card,
+  CardBody,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
-import { FiPlus, FiMinus, FiArrowLeft, FiSave, FiRefreshCw } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-
-// Hooks
-import { useTasks } from '../context/TaskContext';
-
-interface SubTask {
-  title: string;
-  description?: string;
-  priority: 'low' | 'medium' | 'high';
-  dueDate?: Date | null;
-}
+import { FiCalendar, FiAward, FiSave, FiCpu } from 'react-icons/fi';
+import Layout from '../components/Layout';
+import { useTask } from '../context/TaskContext';
 
 const CreateTask: React.FC = () => {
-  const { createTask, breakdownTask } = useTasks();
+  const [useAI, setUseAI] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createTask, breakdownTask } = useTask();
   const navigate = useNavigate();
   const toast = useToast();
   
-  // Task state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('home');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [dueDate, setDueDate] = useState<Date | null>(null);
-  const [subtasks, setSubtasks] = useState<SubTask[]>([]);
-  const [useAiBreakdown, setUseAiBreakdown] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [showReminderOptions, setShowReminderOptions] = useState(false);
-  const [reminderDates, setReminderDates] = useState<Date[]>([]);
+  // Form validation schema
+  const validationSchema = Yup.object({
+    title: Yup.string().required('Title is required').min(3, 'Title must be at least 3 characters'),
+    description: Yup.string(),
+    category: Yup.string().required('Category is required'),
+    priority: Yup.string().required('Priority is required'),
+    dueDate: Yup.date().nullable()
+  });
   
-  const handleAddSubtask = () => {
-    setSubtasks([...subtasks, { title: '', priority: 'medium' }]);
-  };
-  
-  const handleSubtaskChange = (index: number, field: keyof SubTask, value: any) => {
-    const updatedSubtasks = [...subtasks];
-    updatedSubtasks[index] = { ...updatedSubtasks[index], [field]: value };
-    setSubtasks(updatedSubtasks);
-  };
-  
-  const handleRemoveSubtask = (index: number) => {
-    const updatedSubtasks = [...subtasks];
-    updatedSubtasks.splice(index, 1);
-    setSubtasks(updatedSubtasks);
-  };
-  
-  const handleAddReminder = () => {
-    setReminderDates([...reminderDates, new Date()]);
-  };
-  
-  const handleReminderChange = (index: number, date: Date) => {
-    const updatedReminders = [...reminderDates];
-    updatedReminders[index] = date;
-    setReminderDates(updatedReminders);
-  };
-  
-  const handleRemoveReminder = (index: number) => {
-    const updatedReminders = [...reminderDates];
-    updatedReminders.splice(index, 1);
-    setReminderDates(updatedReminders);
-  };
-  
-  const handleGenerateSubtasks = async () => {
-    if (!title) {
-      toast({
-        title: 'Title required',
-        description: 'Please enter a task title before generating subtasks',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    
-    setAiLoading(true);
-    try {
-      const result = await breakdownTask(title, description);
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      title: '',
+      description: '',
+      category: 'work',
+      priority: 'medium',
+      dueDate: null as Date | null,
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      setIsSubmitting(true);
       
-      if (result && result.subtasks && Array.isArray(result.subtasks)) {
-        // Transform the AI result into our subtask format
-        const aiGeneratedSubtasks = result.subtasks.map((item: any) => ({
-          title: item.title,
-          description: item.description || '',
-          priority: item.priority || 'medium',
-          dueDate: item.dueDate ? new Date(Date.now() + item.dueDate * 24 * 60 * 60 * 1000) : null,
-        }));
+      try {
+        const taskData = {
+          title: values.title,
+          description: values.description,
+          category: values.category as any,
+          priority: values.priority as any,
+          dueDate: values.dueDate || undefined
+        };
         
-        setSubtasks(aiGeneratedSubtasks);
+        // Create the task
+        const createdTask = await createTask(taskData);
         
+        // If AI assistance is enabled, break down the task
+        if (useAI && createdTask) {
+          toast({
+            title: 'Task created',
+            description: 'Now using AI to break down your task...',
+            status: 'info',
+            duration: 5000,
+            isClosable: true
+          });
+          
+          await breakdownTask(createdTask._id);
+          
+          toast({
+            title: 'Task breakdown complete',
+            description: 'AI has created subtasks for your task',
+            status: 'success',
+            duration: 3000,
+            isClosable: true
+          });
+        } else {
+          toast({
+            title: 'Task created',
+            status: 'success',
+            duration: 3000,
+            isClosable: true
+          });
+        }
+        
+        // Navigate to task detail
+        navigate(`/tasks/${createdTask._id}`);
+      } catch (err) {
         toast({
-          title: 'Subtasks generated',
-          description: `${aiGeneratedSubtasks.length} subtasks have been created`,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
+          title: 'Error',
+          description: err instanceof Error ? err.message : 'Failed to create task',
+          status: 'error',
+          duration: 5000,
+          isClosable: true
         });
-      } else {
-        throw new Error('Invalid response from AI service');
+      } finally {
+        setIsSubmitting(false);
       }
-    } catch (error) {
-      toast({
-        title: 'Failed to generate subtasks',
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setAiLoading(false);
     }
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!title) {
-      toast({
-        title: 'Title required',
-        description: 'Please enter a task title',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-    
-    try {
-      // Prepare task data
-      const taskData = {
-        title,
-        description,
-        category,
-        priority,
-        dueDate,
-        reminderDates: reminderDates.length > 0 ? reminderDates : undefined,
-        status: 'not_started',
-        aiGenerated: useAiBreakdown,
-      };
-      
-      // Create the main task
-      const newTask = await createTask(taskData);
-      
-      // Add subtasks if any
-      if (subtasks.length > 0 && newTask._id) {
-        // In a real implementation, we'd use a batch operation or transaction
-        // For demo, we'll just show a success message
-        
-        toast({
-          title: 'Task created successfully',
-          description: `Task "${title}" created with ${subtasks.length} subtasks`,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } else {
-        toast({
-          title: 'Task created',
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-      
-      // Navigate back to dashboard
-      navigate('/');
-    } catch (error) {
-      toast({
-        title: 'Failed to create task',
-        description: error instanceof Error ? error.message : 'Unknown error occurred',
-        status: 'error',
-        duration: 4000,
-        isClosable: true,
-      });
-    }
-  };
+  });
   
   return (
-    <Box>
-      <Flex align="center" mb={6}>
-        <IconButton
-          aria-label="Back to dashboard"
-          icon={<FiArrowLeft />}
-          variant="ghost"
-          mr={2}
-          onClick={() => navigate('/')}
-        />
-        <Heading size="lg">Create New Task</Heading>
-      </Flex>
+    <Layout>
+      <Heading mb={6}>Create New Task</Heading>
       
-      <Box
-        as="form"
-        onSubmit={handleSubmit}
-        bg="white"
-        p={6}
-        borderRadius="md"
-        boxShadow="sm"
-      >
-        <VStack spacing={4} align="stretch">
-          {/* Task Details */}
-          <FormControl isRequired>
-            <FormLabel>Task Title</FormLabel>
-            <Input 
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="What do you need to accomplish?"
-            />
-          </FormControl>
-          
-          <FormControl>
-            <FormLabel>Description</FormLabel>
-            <Textarea 
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add details about this task..."
-              rows={3}
-            />
-          </FormControl>
-          
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-            <FormControl>
-              <FormLabel>Category</FormLabel>
-              <Select 
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+      <Card shadow="sm" mb={6}>
+        <CardBody>
+          <form onSubmit={formik.handleSubmit}>
+            <VStack spacing={6} align="start">
+              <FormControl 
+                isInvalid={!!formik.errors.title && formik.touched.title}
+                isRequired
               >
-                <option value="home">Home</option>
-                <option value="work">Work</option>
-                <option value="finance">Finance</option>
-                <option value="health">Health</option>
-                <option value="family">Family</option>
-                <option value="other">Other</option>
-              </Select>
-            </FormControl>
-            
-            <FormControl>
-              <FormLabel>Priority</FormLabel>
-              <Select 
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </Select>
-            </FormControl>
-            
-            <FormControl>
-              <FormLabel>Due Date</FormLabel>
-              <Input
-                type="date"
-                value={dueDate ? dueDate.toISOString().split('T')[0] : ''}
-                onChange={(e) => setDueDate(e.target.value ? new Date(e.target.value) : null)}
-              />
-            </FormControl>
-          </SimpleGrid>
-          
-          {/* Reminders Section */}
-          <Box mt={4}>
-            <Flex align="center" mb={2}>
-              <FormLabel htmlFor="reminders-toggle" mb={0}>Add Reminders</FormLabel>
-              <Switch 
-                id="reminders-toggle"
-                isChecked={showReminderOptions}
-                onChange={() => setShowReminderOptions(!showReminderOptions)}
-              />
-            </Flex>
-            
-            {showReminderOptions && (
-              <Box mt={2} p={4} bg="gray.50" borderRadius="md">
-                <Text fontSize="sm" mb={2}>
-                  Set dates to receive reminders for this task
-                </Text>
+                <FormLabel htmlFor="title">Task Title</FormLabel>
+                <Input
+                  id="title"
+                  name="title"
+                  placeholder="Enter task title"
+                  value={formik.values.title}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+                <FormErrorMessage>{formik.errors.title}</FormErrorMessage>
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel htmlFor="description">Description</FormLabel>
+                <Textarea
+                  id="description"
+                  name="description"
+                  placeholder="Enter task description"
+                  rows={4}
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+              </FormControl>
+              
+              <Flex width="100%" gap={6} direction={{ base: 'column', md: 'row' }}>
+                <FormControl isRequired>
+                  <FormLabel htmlFor="category">Category</FormLabel>
+                  <Select
+                    id="category"
+                    name="category"
+                    value={formik.values.category}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  >
+                    <option value="work">Work</option>
+                    <option value="home">Home</option>
+                    <option value="finance">Finance</option>
+                    <option value="health">Health</option>
+                    <option value="family">Family</option>
+                    <option value="other">Other</option>
+                  </Select>
+                </FormControl>
                 
-                {reminderDates.map((date, index) => (
-                  <Flex key={index} mb={2} align="center">
-                    <Input
-                      type="date"
-                      value={date.toISOString().split('T')[0]}
-                      onChange={(e) => handleReminderChange(index, new Date(e.target.value))}
-                      mr={2}
-                    />
-                    <IconButton
-                      aria-label="Remove reminder"
-                      icon={<FiMinus />}
-                      size="sm"
-                      onClick={() => handleRemoveReminder(index)}
-                    />
-                  </Flex>
-                ))}
+                <FormControl isRequired>
+                  <FormLabel htmlFor="priority">Priority</FormLabel>
+                  <Select
+                    id="priority"
+                    name="priority"
+                    value={formik.values.priority}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </Select>
+                </FormControl>
                 
-                <Button
-                  leftIcon={<FiPlus />}
-                  size="sm"
-                  onClick={handleAddReminder}
-                  mt={2}
+                <FormControl>
+                  <FormLabel htmlFor="dueDate">Due Date</FormLabel>
+                  <Box position="relative">
+                    <DatePicker
+                      selected={formik.values.dueDate}
+                      onChange={(date) => formik.setFieldValue('dueDate', date)}
+                      customInput={
+                        <Input 
+                          placeholder="Select date" 
+                          pr="10"
+                        />
+                      }
+                      dateFormat="MMM d, yyyy"
+                      minDate={new Date()}
+                    />
+                    <Box
+                      position="absolute"
+                      top="50%"
+                      right="2"
+                      transform="translateY(-50%)"
+                      color="gray.500"
+                      pointerEvents="none"
+                    >
+                      <FiCalendar />
+                    </Box>
+                  </Box>
+                </FormControl>
+              </Flex>
+              
+              <Divider />
+              
+              <FormControl>
+                <Flex align="center">
+                  <Switch 
+                    colorScheme="blue" 
+                    size="lg" 
+                    isChecked={useAI}
+                    onChange={() => setUseAI(!useAI)}
+                    id="use-ai"
+                    mr={3}
+                  />
+                  <Box>
+                    <FormLabel htmlFor="use-ai" mb="0" cursor="pointer">
+                      <Flex align="center">
+                        <FiCpu style={{ marginRight: '8px' }} /> 
+                        <Text fontWeight="medium">Use AI to break down this task</Text>
+                      </Flex>
+                    </FormLabel>
+                    <Text fontSize="sm" color="gray.600">
+                      AI will automatically create subtasks for this task
+                    </Text>
+                  </Box>
+                </Flex>
+              </FormControl>
+              
+              {useAI && (
+                <Alert status="info" borderRadius="md">
+                  <AlertIcon />
+                  <Text fontSize="sm">
+                    AI will analyze your task title and description to generate relevant subtasks
+                    with appropriate priorities and due dates.
+                  </Text>
+                </Alert>
+              )}
+              
+              <HStack width="100%" justify="flex-end" pt={4}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/dashboard')}
+                  isDisabled={isSubmitting}
                 >
-                  Add Reminder
+                  Cancel
                 </Button>
-              </Box>
-            )}
-          </Box>
-          
-          {/* AI Breakdown Section */}
-          <Box mt={4}>
-            <Flex align="center" mb={3}>
-              <FormLabel htmlFor="ai-toggle" mb={0}>Use AI to break down this task</FormLabel>
-              <Switch 
-                id="ai-toggle"
-                isChecked={useAiBreakdown}
-                onChange={() => setUseAiBreakdown(!useAiBreakdown)}
-              />
-            </Flex>
-            
-            {useAiBreakdown && (
-              <Box p={4} bg="blue.50" borderRadius="md">
-                <Text fontSize="sm" mb={3}>
-                  Let AI help break down this task into smaller, manageable subtasks.
-                </Text>
-                
-                <Button
-                  leftIcon={<FiRefreshCw />}
+                <Button 
+                  type="submit" 
                   colorScheme="blue"
-                  isLoading={aiLoading}
-                  onClick={handleGenerateSubtasks}
-                  size="sm"
-                  mb={4}
+                  leftIcon={<FiSave />}
+                  isLoading={isSubmitting}
+                  loadingText="Creating Task"
                 >
-                  Generate Subtasks
+                  Create Task
                 </Button>
-                
-                <Divider mb={4} />
-                
-                {subtasks.length > 0 ? (
-                  <>
-                    <Text fontWeight="medium" mb={2}>Subtasks</Text>
-                    <VStack spacing={3} align="stretch">
-                      {subtasks.map((subtask, index) => (
-                        <Box key={index} p={3} borderWidth="1px" borderRadius="md">
-                          <Flex justify="space-between" mb={2}>
-                            <FormControl isRequired>
-                              <Input
-                                value={subtask.title}
-                                onChange={(e) => handleSubtaskChange(index, 'title', e.target.value)}
-                                placeholder="Subtask title"
-                                size="sm"
-                              />
-                            </FormControl>
-                            <IconButton
-                              aria-label="Remove subtask"
-                              icon={<FiMinus />}
-                              size="sm"
-                              ml={2}
-                              onClick={() => handleRemoveSubtask(index)}
-                            />
-                          </Flex>
-                          
-                          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={2} mt={2}>
-                            <FormControl>
-                              <Select
-                                size="sm"
-                                value={subtask.priority}
-                                onChange={(e) => handleSubtaskChange(index, 'priority', e.target.value)}
-                              >
-                                <option value="low">Low Priority</option>
-                                <option value="medium">Medium Priority</option>
-                                <option value="high">High Priority</option>
-                              </Select>
-                            </FormControl>
-                            
-                            <FormControl>
-                              <Input
-                                type="date"
-                                size="sm"
-                                value={subtask.dueDate ? subtask.dueDate.toISOString().split('T')[0] : ''}
-                                onChange={(e) => handleSubtaskChange(
-                                  index, 
-                                  'dueDate', 
-                                  e.target.value ? new Date(e.target.value) : null
-                                )}
-                              />
-                            </FormControl>
-                          </SimpleGrid>
-                        </Box>
-                      ))}
-                    </VStack>
-                  </>
-                ) : aiLoading ? (
-                  <Flex justify="center" py={4}>
-                    <Spinner />
-                    <Text ml={3}>Generating subtasks...</Text>
-                  </Flex>
-                ) : null}
-                
-                <Button
-                  leftIcon={<FiPlus />}
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddSubtask}
-                  mt={3}
-                >
-                  Add Subtask Manually
-                </Button>
-              </Box>
-            )}
-          </Box>
-          
-          <Flex justify="space-between" mt={6}>
-            <Button onClick={() => navigate('/')} variant="outline">
-              Cancel
-            </Button>
-            <Button type="submit" colorScheme="brand" leftIcon={<FiSave />}>
-              Save Task
-            </Button>
-          </Flex>
-        </VStack>
-      </Box>
-    </Box>
+              </HStack>
+            </VStack>
+          </form>
+        </CardBody>
+      </Card>
+    </Layout>
   );
 };
 

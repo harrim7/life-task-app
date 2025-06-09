@@ -8,9 +8,14 @@ import Header from './components/Header';
 
 // Pages
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Register from './pages/Register';
+import CreateTask from './pages/CreateTask';
+import TaskDetail from './pages/TaskDetail';
 
 // Context
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { TaskProvider } from './context/TaskContext';
 
 // Theme
 const theme = extendTheme({
@@ -55,30 +60,7 @@ const Home = () => (
   </Box>
 );
 
-// Dashboard page placeholder
-const Dashboard = () => {
-  return (
-    <Layout>
-      <Heading as="h1" size="xl" mb={6}>Dashboard</Heading>
-      <Text mb={4}>Welcome to your LifeTask AI dashboard. This page is under active development.</Text>
-      <Text mb={4}>In the meantime, you can explore the navigation options in the sidebar.</Text>
-    </Layout>
-  );
-};
-
-// Register page placeholder
-const Register = () => (
-  <Box>
-    <Header />
-    <Container maxW="md" py={10}>
-      <VStack spacing={6} align="center">
-        <Heading as="h1" size="xl" color="brand.500">Register</Heading>
-        <Text>Registration page is under development. Please use the static HTML version for now.</Text>
-        <Button as="a" href="/" colorScheme="blue">Back to Home</Button>
-      </VStack>
-    </Container>
-  </Box>
-);
+// Home page component
 
 // Private route component
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -96,22 +78,48 @@ function App() {
   return (
     <ChakraProvider theme={theme}>
       <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              } 
-            />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </Router>
+        <TaskProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/tasks" 
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route 
+                path="/tasks/create" 
+                element={
+                  <PrivateRoute>
+                    <CreateTask />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/tasks/:id" 
+                element={
+                  <PrivateRoute>
+                    <TaskDetail />
+                  </PrivateRoute>
+                } 
+              />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Router>
+        </TaskProvider>
       </AuthProvider>
     </ChakraProvider>
   );

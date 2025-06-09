@@ -1,275 +1,350 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
+import { 
+  Box, 
+  Heading, 
+  Text, 
+  SimpleGrid, 
+  Flex, 
+  Badge, 
   Button,
-  Flex,
-  Grid,
-  Heading,
-  Input,
+  Spinner,
   Select,
-  SimpleGrid,
-  Text,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  useToast
+  HStack,
+  useToast,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatGroup,
+  Progress,
 } from '@chakra-ui/react';
-import { FiPlus } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
-
-// Components
-import TaskCard from '../components/TaskCard';
-
-// Hooks
-import { useTasks } from '../context/TaskContext';
+import { FiPlusCircle, FiFilter, FiRefreshCw, FiCheck } from 'react-icons/fi';
+import { Link as RouterLink } from 'react-router-dom';
+import Layout from '../components/Layout';
+import { useTask, Task } from '../context/TaskContext';
 
 const Dashboard: React.FC = () => {
-  const { tasks, fetchTasks, deleteTask, updateTask } = useTasks();
-  const [filteredTasks, setFilteredTasks] = useState(tasks);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
-  const navigate = useNavigate();
+  const { tasks, loading, error, fetchTasks } = useTask();
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const toast = useToast();
   
-  // Modal for AI suggestions
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [taskIdForSuggestions, setTaskIdForSuggestions] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<string>('');
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-
+  // Apply filters when tasks or filter settings change
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
-
-  useEffect(() => {
-    // Filter tasks based on search and filters
-    let result = [...tasks];
-    
-    if (searchTerm) {
-      result = result.filter(task => 
-        task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+    if (tasks) {
+      let filtered = [...tasks];
+      
+      // Apply category filter
+      if (categoryFilter !== 'all') {
+        filtered = filtered.filter(task => task.category === categoryFilter);
+      }
+      
+      // Apply status filter
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter(task => task.status === statusFilter);
+      }
+      
+      setFilteredTasks(filtered);
     }
-    
-    if (categoryFilter) {
-      result = result.filter(task => task.category === categoryFilter);
-    }
-    
-    if (statusFilter) {
-      result = result.filter(task => task.status === statusFilter);
-    }
-    
-    if (priorityFilter) {
-      result = result.filter(task => task.priority === priorityFilter);
-    }
-    
-    setFilteredTasks(result);
-  }, [tasks, searchTerm, categoryFilter, statusFilter, priorityFilter]);
-
-  const handleCreateTask = () => {
-    navigate('/tasks/create');
-  };
-
-  const handleEditTask = (id: string) => {
-    navigate(`/tasks/${id}`);
-  };
-
-  const handleDeleteTask = async (id: string) => {
+  }, [tasks, categoryFilter, statusFilter]);
+  
+  // Refresh tasks
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
-      await deleteTask(id);
+      await fetchTasks();
       toast({
-        title: 'Task deleted',
+        title: 'Tasks refreshed',
         status: 'success',
-        duration: 3000,
+        duration: 2000,
         isClosable: true,
       });
-    } catch (error) {
+    } catch (err) {
       toast({
-        title: 'Failed to delete task',
-        description: error instanceof Error ? error.message : 'Unknown error',
+        title: 'Error',
+        description: 'Failed to refresh tasks',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
-    }
-  };
-
-  const handleCompleteTask = async (id: string) => {
-    try {
-      await updateTask(id, { status: 'completed' });
-      toast({
-        title: 'Task completed',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: 'Failed to complete task',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handleGetSuggestions = async (taskId: string) => {
-    setTaskIdForSuggestions(taskId);
-    setLoadingSuggestions(true);
-    onOpen();
-    
-    try {
-      const task = tasks.find(t => t._id === taskId);
-      if (!task) throw new Error('Task not found');
-      
-      const response = await fetch('/api/ai/suggestions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ task }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to get suggestions');
-      
-      const data = await response.json();
-      setSuggestions(data.suggestions);
-    } catch (error) {
-      toast({
-        title: 'Failed to get suggestions',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      setSuggestions('Unable to generate suggestions at this time.');
     } finally {
-      setLoadingSuggestions(false);
+      setIsRefreshing(false);
     }
   };
-
-  // Get unique categories for filter
-  const categories = ['All', ...new Set(tasks.map(task => task.category))];
-
-  return (
-    <Box>
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="lg">My Tasks</Heading>
-        <Button
-          leftIcon={<FiPlus />}
-          colorScheme="brand"
-          onClick={handleCreateTask}
-        >
-          New Task
+  
+  // Calculate task statistics
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(task => task.status === 'completed').length;
+  const inProgressTasks = tasks.filter(task => task.status === 'in_progress').length;
+  const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const highPriorityTasks = tasks.filter(task => task.priority === 'high').length;
+  
+  // Format date for display
+  const formatDate = (date: Date | undefined) => {
+    if (!date) return 'No due date';
+    return new Date(date).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+  
+  // Get badge color based on priority
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'red';
+      case 'medium':
+        return 'orange';
+      case 'low':
+        return 'green';
+      default:
+        return 'gray';
+    }
+  };
+  
+  // Get badge color based on status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'green';
+      case 'in_progress':
+        return 'blue';
+      case 'not_started':
+        return 'gray';
+      case 'deferred':
+        return 'purple';
+      default:
+        return 'gray';
+    }
+  };
+  
+  // Calculate progress for a task
+  const calculateProgress = (task: Task) => {
+    if (task.subtasks.length === 0) return 0;
+    const completedSubtasks = task.subtasks.filter(st => st.completed).length;
+    return Math.round((completedSubtasks / task.subtasks.length) * 100);
+  };
+  
+  // Loading state
+  if (loading && !isRefreshing) {
+    return (
+      <Layout>
+        <Flex justify="center" align="center" height="50vh">
+          <Spinner size="xl" color="brand.500" thickness="4px" />
+        </Flex>
+      </Layout>
+    );
+  }
+  
+  // Error state
+  if (error && !isRefreshing) {
+    return (
+      <Layout>
+        <Alert status="error" borderRadius="md" mb={6}>
+          <AlertIcon />
+          <AlertTitle mr={2}>Error loading tasks!</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button leftIcon={<FiRefreshCw />} onClick={handleRefresh}>
+          Retry
         </Button>
-      </Flex>
-
-      {/* Filters */}
-      <Grid
-        templateColumns={{ base: "1fr", md: "1fr 1fr 1fr 1fr" }}
-        gap={4}
-        mb={6}
-        p={4}
-        bg="white"
-        borderRadius="md"
-        boxShadow="sm"
-      >
-        <Input
-          placeholder="Search tasks..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      </Layout>
+    );
+  }
+  
+  return (
+    <Layout>
+      <Box mb={6}>
+        <Flex justify="space-between" align="center" mb={4}>
+          <Heading as="h1" size="xl" color="gray.800">Dashboard</Heading>
+          <HStack spacing={3}>
+            <Button 
+              leftIcon={<FiRefreshCw />} 
+              variant="outline" 
+              size="sm"
+              isLoading={isRefreshing}
+              onClick={handleRefresh}
+            >
+              Refresh
+            </Button>
+            <Button 
+              as={RouterLink}
+              to="/tasks/create"
+              colorScheme="blue"
+              leftIcon={<FiPlusCircle />}
+              size="sm"
+            >
+              New Task
+            </Button>
+          </HStack>
+        </Flex>
         
-        <Select
-          placeholder="All Categories"
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-        >
-          {categories.map((category, index) => (
-            category !== 'All' && <option key={index} value={category}>{category}</option>
-          ))}
-        </Select>
+        {/* Task Statistics */}
+        <StatGroup bg="white" p={4} borderRadius="lg" shadow="sm" mb={6}>
+          <Stat>
+            <StatLabel>Total Tasks</StatLabel>
+            <StatNumber>{totalTasks}</StatNumber>
+          </Stat>
+          <Stat>
+            <StatLabel>Completed</StatLabel>
+            <StatNumber>{completedTasks}</StatNumber>
+          </Stat>
+          <Stat>
+            <StatLabel>In Progress</StatLabel>
+            <StatNumber>{inProgressTasks}</StatNumber>
+          </Stat>
+          <Stat>
+            <StatLabel>Completion</StatLabel>
+            <StatNumber>{completionPercentage}%</StatNumber>
+            <Progress value={completionPercentage} size="xs" colorScheme="green" mt={2} />
+          </Stat>
+          <Stat>
+            <StatLabel>High Priority</StatLabel>
+            <StatNumber>{highPriorityTasks}</StatNumber>
+          </Stat>
+        </StatGroup>
         
-        <Select
-          placeholder="All Statuses"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+        {/* Filters */}
+        <Flex 
+          bg="white" 
+          p={4} 
+          borderRadius="lg" 
+          shadow="sm" 
+          mb={6}
+          align="center"
+          wrap={{ base: "wrap", md: "nowrap" }}
+          gap={4}
         >
-          <option value="not_started">Not Started</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="deferred">Deferred</option>
-        </Select>
-        
-        <Select
-          placeholder="All Priorities"
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
-        >
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </Select>
-      </Grid>
-
-      {/* Task Grid */}
-      {filteredTasks.length > 0 ? (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-          {filteredTasks.map(task => (
-            <TaskCard
-              key={task._id}
-              task={task}
-              onEdit={handleEditTask}
-              onDelete={handleDeleteTask}
-              onComplete={handleCompleteTask}
-            />
-          ))}
-        </SimpleGrid>
-      ) : (
-        <Box
-          textAlign="center"
-          p={10}
-          bg="white"
-          borderRadius="md"
-          boxShadow="sm"
-        >
-          <Text fontSize="lg" color="gray.500">
-            No tasks found. Create a new task to get started!
-          </Text>
-          <Button
-            mt={4}
-            colorScheme="brand"
-            onClick={handleCreateTask}
+          <FiFilter />
+          <Text fontWeight="medium" mr={2}>Filters:</Text>
+          <Select 
+            value={categoryFilter} 
+            onChange={e => setCategoryFilter(e.target.value)}
+            maxW="200px"
+            size="sm"
           >
-            Create Task
+            <option value="all">All Categories</option>
+            <option value="work">Work</option>
+            <option value="home">Home</option>
+            <option value="finance">Finance</option>
+            <option value="health">Health</option>
+            <option value="family">Family</option>
+            <option value="other">Other</option>
+          </Select>
+          
+          <Select 
+            value={statusFilter} 
+            onChange={e => setStatusFilter(e.target.value)}
+            maxW="200px"
+            size="sm"
+          >
+            <option value="all">All Statuses</option>
+            <option value="not_started">Not Started</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="deferred">Deferred</option>
+          </Select>
+        </Flex>
+      </Box>
+      
+      {/* Task List */}
+      {filteredTasks.length === 0 ? (
+        <Box bg="white" p={8} borderRadius="lg" shadow="sm" textAlign="center">
+          <Heading size="md" mb={4}>No tasks found</Heading>
+          <Text mb={4}>
+            {tasks.length === 0 
+              ? "You don't have any tasks yet." 
+              : "No tasks match your current filters."}
+          </Text>
+          <Button 
+            as={RouterLink}
+            to="/tasks/create"
+            colorScheme="blue"
+            leftIcon={<FiPlusCircle />}
+          >
+            Create Your First Task
           </Button>
         </Box>
+      ) : (
+        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+          {filteredTasks.map(task => (
+            <Box 
+              key={task._id}
+              as={RouterLink}
+              to={`/tasks/${task._id}`}
+              bg="white"
+              p={5}
+              borderRadius="lg"
+              shadow="sm"
+              transition="all 0.2s"
+              _hover={{
+                transform: 'translateY(-4px)',
+                shadow: 'md'
+              }}
+              borderLeft="4px solid"
+              borderLeftColor={`${getPriorityColor(task.priority)}.400`}
+            >
+              <Flex justify="space-between" mb={2}>
+                <Badge colorScheme={getStatusColor(task.status)}>
+                  {task.status === 'not_started' 
+                    ? 'Not Started' 
+                    : task.status === 'in_progress' 
+                    ? 'In Progress' 
+                    : task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                </Badge>
+                <Badge colorScheme={getPriorityColor(task.priority)}>
+                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority
+                </Badge>
+              </Flex>
+              
+              <Heading as="h3" size="md" mb={2} noOfLines={1}>
+                {task.title}
+              </Heading>
+              
+              {task.description && (
+                <Text fontSize="sm" color="gray.600" noOfLines={2} mb={3}>
+                  {task.description}
+                </Text>
+              )}
+              
+              {task.subtasks.length > 0 && (
+                <>
+                  <Progress 
+                    value={calculateProgress(task)} 
+                    size="xs" 
+                    colorScheme="blue" 
+                    mb={2} 
+                  />
+                  <Flex justify="space-between" fontSize="xs" color="gray.500">
+                    <Text>{calculateProgress(task)}% complete</Text>
+                    <Text>
+                      {task.subtasks.filter(st => st.completed).length}/{task.subtasks.length} subtasks
+                    </Text>
+                  </Flex>
+                </>
+              )}
+              
+              <Flex mt={4} fontSize="sm" color="gray.500" justify="space-between" align="center">
+                <Text>
+                  Due: {formatDate(task.dueDate)}
+                </Text>
+                {task.status === 'completed' && (
+                  <Badge colorScheme="green" display="flex" alignItems="center">
+                    <FiCheck size={12} style={{ marginRight: 4 }} /> Completed
+                  </Badge>
+                )}
+              </Flex>
+            </Box>
+          ))}
+        </SimpleGrid>
       )}
-
-      {/* AI Suggestions Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>AI Suggestions</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            {loadingSuggestions ? (
-              <Text>Generating suggestions...</Text>
-            ) : (
-              <Box whiteSpace="pre-wrap">{suggestions}</Box>
-            )}
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </Box>
+    </Layout>
   );
 };
 

@@ -8,6 +8,9 @@ export default defineConfig({
   build: {
     outDir: 'build',
     sourcemap: false,
+    rollupOptions: {
+      external: [],
+    },
   },
   resolve: {
     alias: {
@@ -22,5 +25,15 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'react-icons',
+      'react-datepicker',
+    ],
+    force: true,
   },
 });

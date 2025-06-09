@@ -22,6 +22,16 @@ if (process.env.NODE_ENV === 'production') {
   // Set static folder
   app.use(express.static(path.join(__dirname, '../frontend/build')));
 
+  // Specific routes for static HTML pages
+  app.get('/login', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../frontend/build', 'login.html'));
+  });
+
+  app.get('/register', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../frontend/build', 'register.html'));
+  });
+
+  // All other routes go to index.html
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
   });

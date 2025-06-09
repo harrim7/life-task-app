@@ -9,7 +9,7 @@
     "start:frontend": "cd frontend && npm start",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd frontend && npm install && npm run build",
-    "heroku-postbuild": "npm install --prefix backend && SKIP_PREFLIGHT_CHECK=true BROWSERSLIST_IGNORE_OLD_DATA=true npm install --prefix frontend --legacy-peer-deps && SKIP_PREFLIGHT_CHECK=true BROWSERSLIST_IGNORE_OLD_DATA=true npm run build --prefix frontend --legacy-peer-deps",
+    "heroku-postbuild": "npm install --prefix backend && echo 'Skipping frontend build for now'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

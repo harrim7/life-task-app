@@ -1,15 +1,47 @@
 const { OpenAI } = require('openai');
 require('dotenv').config();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+let openai;
+try {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
+  });
+} catch (error) {
+  console.warn('OpenAI API key not configured. AI features will not work.');
+  openai = null;
+}
 
 /**
  * Breaks down a main task into subtasks using AI
  */
 async function breakdownTask(taskTitle, taskDescription) {
   try {
+    if (!openai) {
+      console.warn('OpenAI client not initialized. Using mock data instead.');
+      return {
+        subtasks: [
+          {
+            title: "Plan Task",
+            description: "Initial planning for " + taskTitle,
+            priority: "high",
+            dueDate: 1
+          },
+          {
+            title: "Execute Task",
+            description: "Implement the core components of " + taskTitle,
+            priority: "medium",
+            dueDate: 3
+          },
+          {
+            title: "Review Task",
+            description: "Review and finalize " + taskTitle,
+            priority: "low",
+            dueDate: 5
+          }
+        ]
+      };
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
@@ -31,6 +63,17 @@ async function breakdownTask(taskTitle, taskDescription) {
  */
 async function prioritizeTasks(tasks) {
   try {
+    if (!openai) {
+      console.warn('OpenAI client not initialized. Using mock data instead.');
+      return {
+        prioritizedTasks: tasks.map(task => ({
+          ...task,
+          priority: task.priority || "medium",
+          reasoning: "Prioritized based on default logic (OpenAI API not available)"
+        }))
+      };
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
@@ -52,6 +95,15 @@ async function prioritizeTasks(tasks) {
  */
 async function generateSuggestions(task) {
   try {
+    if (!openai) {
+      console.warn('OpenAI client not initialized. Using mock data instead.');
+      return `Here are some suggestions for completing "${task.title}":\n\n` +
+        `1. Break this task into smaller steps\n` +
+        `2. Allocate sufficient time for completion\n` +
+        `3. Consider seeking help if needed\n\n` +
+        `Note: These are generic suggestions as the OpenAI API is not available.`;
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [

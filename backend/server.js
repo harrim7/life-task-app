@@ -31,6 +31,20 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.resolve(__dirname, '../frontend/build', 'register.html'));
   });
 
+  // Dashboard and task-related routes
+  app.get('/dashboard', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../frontend/build', 'dashboard.html'));
+  });
+  
+  app.get('/tasks/*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../frontend/build', 'dashboard.html'));
+  });
+
+  // Home page
+  app.get('/', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));
+  });
+  
   // All other routes go to index.html
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../frontend/build', 'index.html'));

@@ -1,10 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Text, Container, Heading, Button, VStack, extendTheme, ChakraProvider } from '@chakra-ui/react';
+import { Text, extendTheme, ChakraProvider } from '@chakra-ui/react';
 
 // Components
 import Layout from './components/Layout';
-import Header from './components/Header';
 
 // Pages
 import Login from './pages/Login';
@@ -12,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import CreateTask from './pages/CreateTask';
 import TaskDetail from './pages/TaskDetail';
+import LandingPage from './pages/LandingPage';
 
 // Context
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -39,28 +39,16 @@ const theme = extendTheme({
   },
 });
 
-// Home page component
-const Home = () => (
-  <Box>
-    <Header />
-    <Container maxW="container.xl" py={10}>
-      <VStack spacing={6} align="center" textAlign="center">
-        <Heading as="h1" size="2xl" color="brand.500">LifeTask AI</Heading>
-        <Text fontSize="xl">Your AI-powered task management assistant</Text>
-        <Box>
-          <Button colorScheme="blue" as="a" href="/login" size="lg" mr={4}>Login</Button>
-          <Button variant="outline" colorScheme="blue" as="a" href="/register" size="lg">Register</Button>
-        </Box>
-        <Text mt={8}>
-          LifeTask AI helps you break down complex tasks, prioritize effectively, 
-          and receive intelligent suggestions for improved productivity.
-        </Text>
-      </VStack>
-    </Container>
-  </Box>
-);
-
-// Home page component
+// Home route component that redirects based on authentication status
+const HomeRoute = () => {
+  const { isAuthenticated } = useAuth();
+  
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" />;
+  }
+  
+  return <LandingPage />;
+};
 
 // Private route component
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -81,7 +69,7 @@ function App() {
         <TaskProvider>
           <Router>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<HomeRoute />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route 

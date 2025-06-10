@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -16,14 +16,20 @@ import {
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-
-// This is a placeholder component for login
-// In a real implementation, this would connect to your AuthContext
+import { useAuth } from '../context/AuthContext';
 
 const Login: React.FC = () => {
+  const { login, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
+  
+  useEffect(() => {
+    // Redirect to dashboard if already authenticated
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
   
   // Form validation schema
   const validationSchema = Yup.object({
@@ -44,13 +50,9 @@ const Login: React.FC = () => {
     onSubmit: async (values) => {
       setIsLoading(true);
       try {
-        // This is where you would call your authentication service
-        console.log('Login attempt with:', values);
+        // Use the actual login function from AuthContext
+        await login(values.email, values.password);
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Simulate successful login
         toast({
           title: 'Login successful',
           description: 'Welcome to LifeTask AI!',
@@ -74,11 +76,13 @@ const Login: React.FC = () => {
     }
   });
   
-  const handleDemoLogin = () => {
+  const handleDemoLogin = async () => {
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Use the actual login with demo credentials
+      await login('demo@example.com', 'demopassword');
+      
       toast({
         title: 'Demo Login',
         description: 'Logged in as demo user',
@@ -88,8 +92,17 @@ const Login: React.FC = () => {
       });
       
       navigate('/dashboard');
+    } catch (error) {
+      toast({
+        title: 'Demo Login Failed',
+        description: 'Could not login with demo account',
+        status: 'error',
+        duration: 3000,
+        isClosable: true
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
   
   return (

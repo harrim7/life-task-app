@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -29,7 +29,14 @@ const Register: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
+  
+  useEffect(() => {
+    // Redirect to dashboard if already authenticated
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
   
   // Form validation schema
   const validationSchema = Yup.object({
@@ -89,7 +96,7 @@ const Register: React.FC = () => {
   
   return (
     <Box>
-      <Header />
+      <Header isLoggedIn={isAuthenticated} />
       <Container maxW="md" py={{ base: 10, md: 20 }}>
         <Box bg="white" p={8} rounded="lg" shadow="base">
           <VStack spacing={6} align="stretch">

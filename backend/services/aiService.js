@@ -47,11 +47,67 @@ async function breakdownTask(taskTitle, taskDescription) {
       messages: [
         { role: "system", content: "You are a helpful assistant that breaks down complex tasks into actionable subtasks." },
         { role: "user", content: `Break down this task into smaller, actionable subtasks: Task: ${taskTitle}\nDescription: ${taskDescription}\n\nProvide output as a JSON array of objects with 'title', 'description', 'priority' (low, medium, high), and estimated 'dueDate' offset in days from now.` }
-      ],
-      response_format: { type: "json_object" }
+      ]
     });
 
-    return JSON.parse(response.choices[0].message.content);
+    // Parse the response - handling both string and JSON formats
+    try {
+      const content = response.choices[0].message.content;
+      // Try to find JSON in the response
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return { subtasks: JSON.parse(jsonMatch[0]) };
+      } else {
+        // Fallback to a simple parsing approach
+        return { 
+          subtasks: [
+            {
+              title: "Research & Planning",
+              description: `Initial research and planning for ${taskTitle}`,
+              priority: "high",
+              dueDate: 1
+            },
+            {
+              title: "Implementation",
+              description: `Execute the main components of ${taskTitle}`,
+              priority: "medium",
+              dueDate: 3
+            },
+            {
+              title: "Review & Finalization",
+              description: `Complete and review ${taskTitle}`,
+              priority: "medium",
+              dueDate: 5
+            }
+          ]
+        };
+      }
+    } catch (parseError) {
+      console.error('Error parsing AI response:', parseError);
+      // Return fallback subtasks
+      return { 
+        subtasks: [
+          {
+            title: "Research & Planning",
+            description: `Initial research and planning for ${taskTitle}`,
+            priority: "high",
+            dueDate: 1
+          },
+          {
+            title: "Implementation",
+            description: `Execute the main components of ${taskTitle}`,
+            priority: "medium",
+            dueDate: 3
+          },
+          {
+            title: "Review & Finalization",
+            description: `Complete and review ${taskTitle}`,
+            priority: "medium",
+            dueDate: 5
+          }
+        ]
+      };
+    }
   } catch (error) {
     console.error('Error breaking down task:', error);
     throw new Error('Failed to break down task using AI');
@@ -79,11 +135,37 @@ async function prioritizeTasks(tasks) {
       messages: [
         { role: "system", content: "You are a helpful assistant that prioritizes tasks based on urgency, importance, and dependencies." },
         { role: "user", content: `Prioritize these tasks and explain why: ${JSON.stringify(tasks)}\n\nProvide output as a JSON array of objects with the original task plus a 'priority' field (low, medium, high) and a 'reasoning' field.` }
-      ],
-      response_format: { type: "json_object" }
+      ]
     });
 
-    return JSON.parse(response.choices[0].message.content);
+    // Handle the response safely
+    try {
+      const content = response.choices[0].message.content;
+      // Try to extract JSON
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return { prioritizedTasks: JSON.parse(jsonMatch[0]) };
+      } else {
+        // Return the original tasks with default priorities
+        return { 
+          prioritizedTasks: tasks.map(task => ({
+            ...task,
+            priority: task.priority || "medium",
+            reasoning: "Prioritized based on default logic"
+          }))
+        };
+      }
+    } catch (parseError) {
+      console.error('Error parsing AI prioritization response:', parseError);
+      // Return a fallback prioritization
+      return { 
+        prioritizedTasks: tasks.map(task => ({
+          ...task,
+          priority: task.priority || "medium",
+          reasoning: "Prioritized based on default logic"
+        }))
+      };
+    }
   } catch (error) {
     console.error('Error prioritizing tasks:', error);
     throw new Error('Failed to prioritize tasks using AI');

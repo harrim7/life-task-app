@@ -5,13 +5,50 @@ const aiService = require('../services/aiService');
  */
 exports.breakdownTask = async (req, res) => {
   try {
-    const { title, description } = req.body;
+    const { taskId, title, description } = req.body;
     
     if (!title) {
       return res.status(400).json({ error: 'Task title is required' });
     }
     
+    // Get the breakdown result from AI service
     const result = await aiService.breakdownTask(title, description || '');
+    
+    // If we have a task ID and subtasks, add them to the task
+    if (taskId && result.subtasks && Array.isArray(result.subtasks)) {
+      const Task = require('../models/Task');
+      const task = await Task.findById(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+      
+      // Check task belongs to authenticated user
+      if (task.user.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ error: 'Not authorized to modify this task' });
+      }
+      
+      // Add each AI-generated subtask to the task
+      for (const subtask of result.subtasks) {
+        const newSubtask = {
+          title: subtask.title,
+          description: subtask.description,
+          priority: subtask.priority,
+          dueDate: subtask.dueDate 
+            ? new Date(Date.now() + subtask.dueDate * 24 * 60 * 60 * 1000) // Convert days to milliseconds
+            : undefined
+        };
+        
+        task.subtasks.push(newSubtask);
+      }
+      
+      task.updatedAt = new Date();
+      await task.save();
+      
+      return res.status(200).json(task);
+    }
+    
+    // If no task ID, just return the subtasks
     res.status(200).json(result);
   } catch (error) {
     console.error('Error in breakdownTask controller:', error);

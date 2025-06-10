@@ -27,17 +27,8 @@ heroku config:set OPENAI_API_KEY="$openai_key"
 heroku config:set NODE_ENV=production
 heroku config:set NODE_OPTIONS=--openssl-legacy-provider
 
-# Create local .env file if it doesn't exist
-if [ ! -f ./backend/.env ]; then
-    echo "Creating .env file in backend directory..."
-    cat > ./backend/.env << EOF
-MONGODB_URI=$mongodb_uri
-JWT_SECRET=$jwt_secret
-OPENAI_API_KEY=$openai_key
-NODE_ENV=development
-EOF
-    echo "Local .env file created."
-fi
+# We don't create .env files in the repository anymore
+# Refer to backend/SETUP.md for instructions on creating your own .env file locally
 
 # Install dependencies
 echo "Installing dependencies..."

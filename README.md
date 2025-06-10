@@ -48,8 +48,8 @@ LifeTask AI is a modern task management application that leverages AI to help us
    ```
 
 3. Set up environment variables
-   - Copy `.env.example` to `.env` in the backend directory
-   - Fill in your MongoDB URI, JWT secret, and OpenAI API key
+   - Follow instructions in `backend/SETUP.md` to create your `.env` file
+   - Configure your MongoDB URI, JWT secret, and OpenAI API key
 
 4. Start the development servers
    ```

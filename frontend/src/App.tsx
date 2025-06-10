@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import CreateTask from './pages/CreateTask';
 import TaskDetail from './pages/TaskDetail';
+import TaskCalendar from './pages/TaskCalendar';
 import LandingPage from './pages/LandingPage';
 
 // Context
@@ -157,6 +158,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <TaskDetail />
+                  </PrivateRoute>
+                } 
+              />
+              <Route 
+                path="/calendar" 
+                element={
+                  <PrivateRoute>
+                    <TaskCalendar />
                   </PrivateRoute>
                 } 
               />

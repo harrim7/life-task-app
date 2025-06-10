@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, VStack, Link, Text, Icon, Divider, Heading } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { FiHome, FiList, FiPlus, FiFolder, FiSettings, FiBarChart2 } from 'react-icons/fi';
+import { FiHome, FiList, FiPlus, FiFolder, FiSettings, FiBarChart2, FiCalendar } from 'react-icons/fi';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -9,6 +9,7 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: FiHome },
     { name: 'All Tasks', path: '/tasks', icon: FiList },
+    { name: 'Calendar', path: '/calendar', icon: FiCalendar },
     { name: 'Create Task', path: '/tasks/create', icon: FiPlus },
     { name: 'Categories', path: '/categories', icon: FiFolder },
     { name: 'Reports', path: '/reports', icon: FiBarChart2 },

@@ -19,6 +19,10 @@ const UserSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  location: {
+    type: String,
+    default: ''
+  },
   preferences: {
     theme: {
       type: String,

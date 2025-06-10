@@ -9,6 +9,7 @@ import {
   FormLabel,
   Heading,
   HStack,
+  Icon,
   IconButton,
   Input,
   Modal,

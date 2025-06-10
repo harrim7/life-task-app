@@ -232,6 +232,11 @@ async function generateSubtaskSuggestions(contextData, subtask) {
     // Extract location information if available
     const userLocation = contextData.userContext?.location || 'Unknown';
     
+    // Determine location-specific instructions
+    const locationInstructions = userLocation && userLocation !== 'Unknown'
+      ? `When mentioning local services or location-specific information, refer to the user's location: ${userLocation}.`
+      : `When suggesting local services, provide general advice on how to find local providers regardless of location.`;
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
@@ -241,7 +246,7 @@ async function generateSubtaskSuggestions(contextData, subtask) {
                     You have extensive knowledge about how to accomplish tasks efficiently and can provide detailed, 
                     actionable advice including resources, tools, services, and step-by-step instructions.
                     
-                    When mentioning local services or location-specific information, refer to the user's location: ${userLocation}.
+                    ${locationInstructions}
                     
                     Your goal is to make this subtask as easy as possible to complete by providing comprehensive, 
                     specific guidance. When a task is about finding services (plumbers, contractors, specialists), 

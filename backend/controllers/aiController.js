@@ -129,7 +129,20 @@ exports.generateSubtaskSuggestions = async (req, res) => {
     
     // Add user location if available
     const User = require('../models/User');
-    const user = await User.findById(req.user._id).select('location preferences').lean();
+    let userContext = {};
+    
+    try {
+      const user = await User.findById(req.user._id).select('location preferences').lean();
+      if (user) {
+        userContext = {
+          location: user.location || 'Unknown',
+          preferences: user.preferences || {}
+        };
+      }
+    } catch (err) {
+      console.log('Could not retrieve user data:', err);
+      // Continue without user context
+    }
     
     // Prepare a rich context object for the AI
     const contextData = {
@@ -148,10 +161,7 @@ exports.generateSubtaskSuggestions = async (req, res) => {
         priority: st.priority,
         completed: st.completed
       })),
-      userContext: user ? {
-        location: user.location || 'Unknown',
-        preferences: user.preferences || {}
-      } : {}
+      userContext
     };
     
     // Get suggestions with enhanced context

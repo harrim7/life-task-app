@@ -52,7 +52,8 @@ const TaskDetail: React.FC = () => {
     updateSubtask, 
     deleteSubtask,
     breakdownTask,
-    generateSuggestions 
+    generateSuggestions,
+    generateSubtaskSuggestions
   } = useTask();
   const navigate = useNavigate();
   const toast = useToast();
@@ -82,6 +83,12 @@ const TaskDetail: React.FC = () => {
   const { isOpen: isSuggestionsOpen, onOpen: onSuggestionsOpen, onClose: onSuggestionsClose } = useDisclosure();
   const [suggestions, setSuggestions] = useState<string | null>(null);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+  
+  // Subtask AI Suggestions
+  const { isOpen: isSubtaskSuggestionsOpen, onOpen: onSubtaskSuggestionsOpen, onClose: onSubtaskSuggestionsClose } = useDisclosure();
+  const [subtaskSuggestions, setSubtaskSuggestions] = useState<string | null>(null);
+  const [currentSubtaskId, setCurrentSubtaskId] = useState<string | null>(null);
+  const [isFetchingSubtaskSuggestions, setIsFetchingSubtaskSuggestions] = useState(false);
   
   useEffect(() => {
     const loadTask = async () => {
@@ -324,6 +331,41 @@ const TaskDetail: React.FC = () => {
       setSuggestions('Unable to generate suggestions at this time.');
     } finally {
       setIsFetchingSuggestions(false);
+    }
+  };
+
+  // AI Suggestions for Subtasks
+  const handleGetSubtaskSuggestions = async (subtaskId: string) => {
+    if (!task || !id) return;
+    
+    setCurrentSubtaskId(subtaskId);
+    setIsFetchingSubtaskSuggestions(true);
+    onSubtaskSuggestionsOpen();
+    
+    try {
+      const result = await generateSubtaskSuggestions(id, subtaskId);
+      setSubtaskSuggestions(result.suggestions);
+      
+      // Update the local task state to reflect the aiAssisted flag
+      if (task) {
+        setTask({
+          ...task,
+          subtasks: task.subtasks.map(st => 
+            st._id === subtaskId ? {...st, aiAssisted: true} : st
+          )
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Failed to get subtask suggestions',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      setSubtaskSuggestions('Unable to generate suggestions for this subtask at this time.');
+    } finally {
+      setIsFetchingSubtaskSuggestions(false);
     }
   };
   
@@ -724,7 +766,7 @@ const TaskDetail: React.FC = () => {
                     colorScheme="green"
                   />
                   <Box flex="1">
-                    <Flex align="center">
+                    <Flex align="center" wrap="wrap">
                       <Text
                         fontWeight="medium"
                         textDecoration={subtask.completed ? 'line-through' : 'none'}
@@ -735,6 +777,11 @@ const TaskDetail: React.FC = () => {
                       <Badge ml={2} colorScheme={getPriorityColor(subtask.priority)} size="sm">
                         {subtask.priority}
                       </Badge>
+                      {subtask.aiAssisted && (
+                        <Badge ml={2} colorScheme="blue" variant="outline" size="sm">
+                          AI-Assisted
+                        </Badge>
+                      )}
                     </Flex>
                     {subtask.description && (
                       <Text fontSize="sm" color="gray.600" mt={1}>
@@ -748,6 +795,17 @@ const TaskDetail: React.FC = () => {
                     )}
                   </Box>
                   <Flex>
+                    <Tooltip label={subtask.aiAssisted ? "View AI assistance" : "Get AI help with this subtask"}>
+                      <IconButton
+                        aria-label="Get AI help"
+                        icon={<FiCpu />}
+                        size="sm"
+                        variant={subtask.aiAssisted ? "solid" : "ghost"}
+                        colorScheme="blue"
+                        mr={1}
+                        onClick={() => handleGetSubtaskSuggestions(subtask._id)}
+                      />
+                    </Tooltip>
                     <IconButton
                       aria-label="Edit subtask"
                       icon={<FiEdit />}
@@ -969,6 +1027,110 @@ const TaskDetail: React.FC = () => {
           </ModalBody>
           <ModalFooter>
             <Button onClick={onSuggestionsClose}>Close</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Subtask AI Suggestions Modal */}
+      <Modal isOpen={isSubtaskSuggestionsOpen} onClose={onSubtaskSuggestionsClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader bg="blue.50" borderTopRadius="md">
+            <Flex align="center">
+              <Icon as={FiCpu} color="blue.500" mr={2} />
+              <Box>
+                <Text>AI Assistant for Subtask</Text>
+                {currentSubtaskId && task && (
+                  <Text fontWeight="bold" fontSize="lg">
+                    {task.subtasks.find(st => st._id === currentSubtaskId)?.title}
+                  </Text>
+                )}
+              </Box>
+            </Flex>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            {isFetchingSubtaskSuggestions ? (
+              <Flex direction="column" align="center" justify="center" py={10}>
+                <Spinner size="xl" color="blue.500" thickness="4px" mb={4} />
+                <Text>Generating personalized assistance for this subtask...</Text>
+                <Text fontSize="sm" color="gray.500" mt={2}>
+                  I'm finding the best resources, steps, and recommendations to help you complete this subtask efficiently.
+                </Text>
+              </Flex>
+            ) : (
+              <Box>
+                <Box 
+                  bg="yellow.50" 
+                  p={4} 
+                  borderRadius="md" 
+                  mb={4} 
+                  borderLeft="4px solid" 
+                  borderLeftColor="yellow.400"
+                >
+                  <Flex align="center" mb={2}>
+                    <Icon as={FiInfo} color="yellow.600" mr={2} />
+                    <Text fontWeight="bold" color="yellow.700">How This Helps</Text>
+                  </Flex>
+                  <Text fontSize="sm">
+                    This AI-generated assistance provides personalized guidance, resource recommendations, 
+                    and step-by-step instructions to help you complete this subtask efficiently. 
+                    You can save time by following these suggestions rather than doing the research yourself.
+                  </Text>
+                </Box>
+                <Box 
+                  bg="white" 
+                  p={4} 
+                  borderRadius="md" 
+                  borderWidth="1px" 
+                  borderColor="gray.200"
+                  whiteSpace="pre-wrap"
+                  maxH="500px"
+                  overflowY="auto"
+                  sx={{
+                    '& h1, & h2, & h3': {
+                      fontWeight: 'bold',
+                      marginTop: '1rem',
+                      marginBottom: '0.5rem'
+                    },
+                    '& ul, & ol': {
+                      paddingLeft: '1.5rem',
+                      marginBottom: '1rem'
+                    },
+                    '& li': {
+                      marginBottom: '0.25rem'
+                    }
+                  }}
+                >
+                  {subtaskSuggestions}
+                </Box>
+              </Box>
+            )}
+          </ModalBody>
+          <ModalFooter borderTop="1px solid" borderTopColor="gray.200" bg="gray.50" borderBottomRadius="md">
+            <Flex width="100%" justify="space-between" align="center">
+              <Text fontSize="sm" color="gray.500">
+                {currentSubtaskId && task && (
+                  <>Part of: {task.title}</>
+                )}
+              </Text>
+              <HStack>
+                <Button 
+                  variant="outline" 
+                  onClick={onSubtaskSuggestionsClose} 
+                  mr={2}
+                >
+                  Close
+                </Button>
+                <Button 
+                  colorScheme="blue" 
+                  leftIcon={<FiCheckCircle />}
+                  onClick={onSubtaskSuggestionsClose}
+                >
+                  Got It
+                </Button>
+              </HStack>
+            </Flex>
           </ModalFooter>
         </ModalContent>
       </Modal>

@@ -10,5 +10,6 @@ router.use(requireAuth);
 router.post('/breakdown', aiController.breakdownTask);
 router.post('/prioritize', aiController.prioritizeTasks);
 router.post('/suggestions', aiController.generateSuggestions);
+router.post('/subtask-suggestions', aiController.generateSubtaskSuggestions);
 
 module.exports = router;

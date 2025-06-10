@@ -93,3 +93,86 @@ exports.generateSuggestions = async (req, res) => {
     res.status(500).json({ error: 'Failed to generate suggestions' });
   }
 };
+
+/**
+ * Generate suggestions for completing a specific subtask
+ */
+exports.generateSubtaskSuggestions = async (req, res) => {
+  try {
+    const { taskId, subtaskId } = req.body;
+    
+    if (!taskId || !subtaskId) {
+      return res.status(400).json({ error: 'Task ID and subtask ID are required' });
+    }
+    
+    // Find the task and subtask
+    const Task = require('../models/Task');
+    const task = await Task.findById(taskId).lean();
+    
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    
+    // Check task belongs to authenticated user
+    if (task.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Not authorized to access this task' });
+    }
+    
+    // Find the subtask
+    const subtask = task.subtasks.find(st => st._id.toString() === subtaskId);
+    if (!subtask) {
+      return res.status(404).json({ error: 'Subtask not found' });
+    }
+    
+    // Get related subtasks for context
+    const relatedSubtasks = task.subtasks.filter(st => st._id.toString() !== subtaskId);
+    
+    // Add user location if available
+    const User = require('../models/User');
+    const user = await User.findById(req.user._id).select('location preferences').lean();
+    
+    // Prepare a rich context object for the AI
+    const contextData = {
+      task: {
+        title: task.title,
+        description: task.description,
+        category: task.category,
+        priority: task.priority,
+        status: task.status,
+        dueDate: task.dueDate
+      },
+      subtask: subtask,
+      relatedSubtasks: relatedSubtasks.map(st => ({
+        title: st.title,
+        description: st.description,
+        priority: st.priority,
+        completed: st.completed
+      })),
+      userContext: user ? {
+        location: user.location || 'Unknown',
+        preferences: user.preferences || {}
+      } : {}
+    };
+    
+    // Get suggestions with enhanced context
+    const suggestions = await aiService.generateSubtaskSuggestions(contextData, subtask);
+    
+    // Mark the subtask as AI-assisted in the database
+    const taskDoc = await Task.findById(taskId);
+    const subtaskDoc = taskDoc.subtasks.id(subtaskId);
+    subtaskDoc.aiAssisted = true;
+    await taskDoc.save();
+    
+    // Return the updated subtask and suggestions
+    res.status(200).json({ 
+      suggestions, 
+      subtask: {
+        ...subtask,
+        aiAssisted: true
+      } 
+    });
+  } catch (error) {
+    console.error('Error in generateSubtaskSuggestions controller:', error);
+    res.status(500).json({ error: 'Failed to generate subtask suggestions' });
+  }
+};

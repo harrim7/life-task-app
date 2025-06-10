@@ -215,8 +215,67 @@ async function generateSuggestions(task) {
   }
 }
 
+/**
+ * Generates specific suggestions for completing a subtask
+ */
+async function generateSubtaskSuggestions(contextData, subtask) {
+  try {
+    if (!openai) {
+      console.warn('OpenAI client not initialized. Using mock data instead.');
+      return `Here are some suggestions for completing the subtask "${subtask.title}":\n\n` +
+        `1. Research best practices for this specific step\n` +
+        `2. Set a timer to focus on just this subtask\n` +
+        `3. Consider what tools or resources you'll need\n\n` +
+        `Note: These are generic suggestions as the OpenAI API is not available.`;
+    }
+
+    // Extract location information if available
+    const userLocation = contextData.userContext?.location || 'Unknown';
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { 
+          role: "system", 
+          content: `You are a helpful assistant that provides specific, practical suggestions for completing subtasks. 
+                    You have extensive knowledge about how to accomplish tasks efficiently and can provide detailed, 
+                    actionable advice including resources, tools, services, and step-by-step instructions.
+                    
+                    When mentioning local services or location-specific information, refer to the user's location: ${userLocation}.
+                    
+                    Your goal is to make this subtask as easy as possible to complete by providing comprehensive, 
+                    specific guidance. When a task is about finding services (plumbers, contractors, specialists), 
+                    provide exact search terms, websites, apps, and criteria for selection.`
+        },
+        { 
+          role: "user", 
+          content: `Provide detailed, practical assistance for completing this subtask: ${JSON.stringify(subtask)}\n\n` +
+            `Here is the full context:\n${JSON.stringify(contextData, null, 2)}\n\n` +
+            `Please include ALL of the following in your response:
+            1. Step-by-step instructions for completing this specific subtask
+            2. Relevant resources, tools, or services that would help (be specific - include websites, app names, service providers, etc.)
+            3. If applicable, provide contact information or search terms for finding local services (plumbers, contractors, etc.)
+            4. If applicable, provide product recommendations or alternatives
+            5. Estimated time required and difficulty level
+            6. Common pitfalls to avoid and how to verify successful completion
+            
+            Format your response in a clear, organized way with headings and bullet points when appropriate.`
+        }
+      ],
+      temperature: 0.7, // Add some creativity but keep it practical
+      max_tokens: 1500  // Allow for detailed responses
+    });
+
+    return response.choices[0].message.content;
+  } catch (error) {
+    console.error('Error generating subtask suggestions:', error);
+    throw new Error('Failed to generate subtask suggestions using AI');
+  }
+}
+
 module.exports = {
   breakdownTask,
   prioritizeTasks,
-  generateSuggestions
+  generateSuggestions,
+  generateSubtaskSuggestions
 };

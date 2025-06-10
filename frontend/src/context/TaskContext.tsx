@@ -13,6 +13,7 @@ export interface Subtask {
   completedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  aiAssisted?: boolean;
 }
 
 export interface Task {
@@ -173,6 +174,7 @@ interface TaskContextType {
   breakdownTask: (taskId: string) => Promise<Task>;
   prioritizeTasks: () => Promise<Task[]>;
   generateSuggestions: (taskId: string) => Promise<string>;
+  generateSubtaskSuggestions: (taskId: string, subtaskId: string) => Promise<{ suggestions: string, subtask: Subtask }>;
 }
 
 // Create the context
@@ -701,6 +703,78 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       throw new Error('Failed to generate suggestions. Please try again later.');
     }
   };
+
+  // Generate suggestions for a specific subtask
+  const generateSubtaskSuggestions = async (taskId: string, subtaskId: string): Promise<{ suggestions: string, subtask: Subtask }> => {
+    try {
+      // Find the task
+      const task = await getTask(taskId);
+      
+      if (!task) {
+        throw new Error('Task not found');
+      }
+      
+      const subtask = task.subtasks.find(st => st._id === subtaskId);
+      
+      if (!subtask) {
+        throw new Error('Subtask not found');
+      }
+      
+      const response = await axios.post('/api/ai/subtask-suggestions', { taskId, subtaskId });
+      
+      // Update the task in local state with the AI-assisted subtask
+      setTasks(prevTasks => 
+        prevTasks.map(t => {
+          if (t._id === taskId) {
+            return {
+              ...t,
+              subtasks: t.subtasks.map(st => 
+                st._id === subtaskId ? {...st, aiAssisted: true} : st
+              )
+            };
+          }
+          return t;
+        })
+      );
+      
+      return response.data;
+    } catch (err) {
+      console.error(`Error generating suggestions for subtask ${subtaskId}:`, err);
+      
+      // Fallback to mock data in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Using mock data for development');
+        
+        const task = mockTasks.find(t => t._id === taskId);
+        
+        if (!task) {
+          throw new Error('Task not found');
+        }
+        
+        const subtask = task.subtasks.find(st => st._id === subtaskId);
+        
+        if (!subtask) {
+          throw new Error('Subtask not found');
+        }
+        
+        // Update the subtask in mock data
+        const updatedSubtask = {...subtask, aiAssisted: true};
+        
+        // Return mock suggestions
+        return {
+          suggestions: `Here are some specific suggestions for completing the subtask "${subtask.title}":\n\n` +
+            `1. Research best practices for this particular step\n` +
+            `2. Set a 25-minute focused work session (pomodoro) for this subtask\n` +
+            `3. Check these specific resources: [relevant links would be here]\n` +
+            `4. Use the following technique: [specific technique for this type of subtask]\n\n` +
+            `Estimated time required: ${subtask.priority === 'high' ? '1-2' : subtask.priority === 'medium' ? '0.5-1' : '0.25-0.5'} hours`,
+          subtask: updatedSubtask
+        };
+      }
+      
+      throw new Error('Failed to generate subtask suggestions. Please try again later.');
+    }
+  };
   
   // Context value
   const value: TaskContextType = {
@@ -717,7 +791,8 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     deleteSubtask,
     breakdownTask,
     prioritizeTasks,
-    generateSuggestions
+    generateSuggestions,
+    generateSubtaskSuggestions
   };
   
   return (

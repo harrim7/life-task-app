@@ -19,7 +19,11 @@ const SubtaskSchema = new mongoose.Schema({
   },
   notes: String,
   resources: [String],
-  completedAt: Date
+  completedAt: Date,
+  aiAssisted: {
+    type: Boolean,
+    default: false
+  }
 }, { timestamps: true });
 
 const TaskSchema = new mongoose.Schema({

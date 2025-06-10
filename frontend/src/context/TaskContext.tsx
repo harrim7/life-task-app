@@ -10,6 +10,7 @@ export interface Subtask {
   priority: 'low' | 'medium' | 'high';
   dueDate?: Date;
   completed: boolean;
+  completedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,8 @@ export interface Task {
   userId: string;
   createdAt: Date;
   updatedAt: Date;
+  completedAt?: Date;
+  aiGenerated?: boolean;
 }
 
 interface NewTask {
@@ -61,6 +64,7 @@ interface SubtaskUpdate {
   priority?: 'low' | 'medium' | 'high';
   dueDate?: Date;
   completed?: boolean;
+  completedAt?: Date;
 }
 
 // Mock data for development (will be removed when API is connected)

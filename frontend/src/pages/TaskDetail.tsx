@@ -8,6 +8,7 @@ import {
   FormControl,
   FormLabel,
   Heading,
+  HStack,
   IconButton,
   Input,
   Modal,
@@ -30,6 +31,10 @@ import {
 } from '@chakra-ui/react';
 import { FiArrowLeft, FiPlus, FiTrash2, FiEdit, FiCheckCircle, FiAward, FiCalendar, FiInfo, FiCpu } from 'react-icons/fi';
 import { useNavigate, useParams } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
 
 // Hooks
 import { useTask, Task, Subtask } from '../context/TaskContext';
@@ -51,19 +56,29 @@ const TaskDetail: React.FC = () => {
   
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
+  const [isBreakingDown, setIsBreakingDown] = useState(false);
   
   // Subtask modals
-  const { isOpen: isAddSubtaskOpen, onOpen: onAddSubtaskOpen, onClose: onAddSubtaskClose } = useDisclosure();
-  const { isOpen: isEditSubtaskOpen, onOpen: onEditSubtaskOpen, onClose: onEditSubtaskClose } = useDisclosure();
-  const [newSubtask, setNewSubtask] = useState<Partial<SubTask>>({ title: '', priority: 'medium', completed: false });
-  const [editingSubtask, setEditingSubtask] = useState<{ subtask: Partial<SubTask>, index: number } | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { 
+    isOpen: isEditSubtaskOpen, 
+    onOpen: onEditSubtaskOpen, 
+    onClose: onEditSubtaskClose 
+  } = useDisclosure();
+  
+  // Subtask states
+  const [editingSubtask, setEditingSubtask] = useState<{
+    subtask: Subtask;
+    index: number;
+  } | null>(null);
   
   // AI Suggestions
   const { isOpen: isSuggestionsOpen, onOpen: onSuggestionsOpen, onClose: onSuggestionsClose } = useDisclosure();
-  const [suggestions, setSuggestions] = useState('');
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<string | null>(null);
+  const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
   
   useEffect(() => {
     const loadTask = async () => {
@@ -101,7 +116,7 @@ const TaskDetail: React.FC = () => {
   }, [id, getTask, toast]);
   
   const handleEditToggle = () => {
-    if (editMode && task) {
+    if (isEditing && task) {
       // Reset form
       setEditedTask({
         title: task.title,
@@ -112,7 +127,7 @@ const TaskDetail: React.FC = () => {
         dueDate: task.dueDate,
       });
     }
-    setEditMode(!editMode);
+    setIsEditing(!isEditing);
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -130,7 +145,7 @@ const TaskDetail: React.FC = () => {
     try {
       const updatedTask = await updateTask(id, editedTask);
       setTask(updatedTask);
-      setEditMode(false);
+      setIsEditing(false);
       
       toast({
         title: 'Task updated',
@@ -175,24 +190,39 @@ const TaskDetail: React.FC = () => {
   };
   
   // Subtask handlers
-  const handleAddSubtask = async () => {
-    if (!id || !newSubtask.title) return;
+  // Function to handle editing a subtask
+  const openEditSubtask = (subtask: Subtask, index: number) => {
+    setEditingSubtask({ subtask, index });
+    onEditSubtaskOpen();
+  };
+  
+  // Function to handle updating a subtask
+  const handleUpdateSubtask = async () => {
+    if (!id || !task || !editingSubtask || !editingSubtask.subtask._id) return;
     
     try {
-      const updatedTask = await addSubtask(id, newSubtask);
-      setTask(updatedTask);
-      setNewSubtask({ title: '', priority: 'medium', completed: false });
-      onAddSubtaskClose();
+      await updateSubtask(id, editingSubtask.subtask._id, editingSubtask.subtask);
+      
+      // Update local state
+      const updatedSubtasks = [...task.subtasks];
+      updatedSubtasks[editingSubtask.index] = editingSubtask.subtask;
+      
+      setTask({
+        ...task,
+        subtasks: updatedSubtasks
+      });
       
       toast({
-        title: 'Subtask added',
+        title: 'Subtask updated',
         status: 'success',
         duration: 3000,
         isClosable: true,
       });
+      
+      onEditSubtaskClose();
     } catch (error) {
       toast({
-        title: 'Failed to add subtask',
+        title: 'Failed to update subtask',
         description: error instanceof Error ? error.message : 'Unknown error',
         status: 'error',
         duration: 3000,
@@ -201,6 +231,7 @@ const TaskDetail: React.FC = () => {
     }
   };
   
+  // Formik's onSubmit handles form submission
   
   
   const handleDeleteSubtask = async (subtaskId: string) => {
@@ -234,7 +265,7 @@ const TaskDetail: React.FC = () => {
     }
   };
   
-  const handleSubtaskCompletion = async (subtask: SubTask) => {
+  const handleSubtaskCompletion = async (subtask: Subtask) => {
     if (!id || !subtask._id) return;
     
     const newCompletedState = !subtask.completed;
@@ -273,7 +304,7 @@ const TaskDetail: React.FC = () => {
   const handleGetSuggestions = async () => {
     if (!task) return;
     
-    setLoadingSuggestions(true);
+    setIsFetchingSuggestions(true);
     onSuggestionsOpen();
     
     try {
@@ -289,7 +320,7 @@ const TaskDetail: React.FC = () => {
       });
       setSuggestions('Unable to generate suggestions at this time.');
     } finally {
-      setLoadingSuggestions(false);
+      setIsFetchingSuggestions(false);
     }
   };
   
@@ -461,6 +492,7 @@ const TaskDetail: React.FC = () => {
             leftIcon={<FiInfo />}
             mr={2}
             onClick={handleGetSuggestions}
+            isLoading={isFetchingSuggestions}
           >
             Get Help
           </Button>
@@ -513,7 +545,7 @@ const TaskDetail: React.FC = () => {
           )}
         </Flex>
         
-        {editMode ? (
+        {isEditing ? (
           <Stack spacing={4}>
             <FormControl>
               <FormLabel>Description</FormLabel>
@@ -642,6 +674,7 @@ const TaskDetail: React.FC = () => {
                 colorScheme="purple" 
                 size="sm"
                 onClick={handleBreakdownTask}
+                isLoading={isBreakingDown}
               >
                 AI Breakdown
               </Button>
@@ -650,7 +683,7 @@ const TaskDetail: React.FC = () => {
               leftIcon={<FiPlus />} 
               colorScheme="blue" 
               size="sm" 
-              onClick={onAddSubtaskOpen}
+              onClick={onOpen}
             >
               Add Subtask
             </Button>
@@ -737,7 +770,7 @@ const TaskDetail: React.FC = () => {
             <Text color="gray.500" mb={4}>
               No subtasks yet. Break down your task into smaller steps for better progress tracking.
             </Text>
-            <Button leftIcon={<FiPlus />} colorScheme="brand" onClick={onAddSubtaskOpen}>
+            <Button leftIcon={<FiPlus />} colorScheme="blue" onClick={onOpen}>
               Add Your First Subtask
             </Button>
           </Box>
@@ -745,53 +778,65 @@ const TaskDetail: React.FC = () => {
       </Box>
       
       {/* Add Subtask Modal */}
-      <Modal isOpen={isAddSubtaskOpen} onClose={onAddSubtaskClose}>
+      <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Add Subtask</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl isRequired mb={4}>
-              <FormLabel>Title</FormLabel>
-              <Input 
-                value={newSubtask.title} 
-                onChange={(e) => setNewSubtask({...newSubtask, title: e.target.value})}
-                placeholder="Enter subtask title"
-              />
-            </FormControl>
-            
-            <FormControl mb={4}>
-              <FormLabel>Description</FormLabel>
-              <Textarea 
-                value={newSubtask.description || ''} 
-                onChange={(e) => setNewSubtask({...newSubtask, description: e.target.value})}
-                placeholder="Enter subtask description (optional)"
-              />
-            </FormControl>
-            
-            <FormControl mb={4}>
-              <FormLabel>Priority</FormLabel>
-              <Select
-                value={newSubtask.priority}
-                onChange={(e) => setNewSubtask({...newSubtask, priority: e.target.value as 'low' | 'medium' | 'high'})}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </Select>
-            </FormControl>
-            
-            <FormControl>
-              <FormLabel>Due Date</FormLabel>
-              <Input 
-                type="date"
-                value={newSubtask.dueDate ? new Date(newSubtask.dueDate).toISOString().split('T')[0] : ''}
-                onChange={(e) => setNewSubtask({
-                  ...newSubtask, 
-                  dueDate: e.target.value ? new Date(e.target.value) : undefined
-                })}
-              />
-            </FormControl>
+            <form id="add-subtask-form" onSubmit={subtaskFormik.handleSubmit}>
+              <FormControl isRequired mb={4}>
+                <FormLabel>Title</FormLabel>
+                <Input 
+                  id="title"
+                  name="title"
+                  value={subtaskFormik.values.title} 
+                  onChange={subtaskFormik.handleChange}
+                  onBlur={subtaskFormik.handleBlur}
+                  isInvalid={subtaskFormik.touched.title && Boolean(subtaskFormik.errors.title)}
+                  placeholder="Enter subtask title"
+                />
+                {subtaskFormik.touched.title && subtaskFormik.errors.title && (
+                  <Text color="red.500" fontSize="sm">{subtaskFormik.errors.title as string}</Text>
+                )}
+              </FormControl>
+              
+              <FormControl mb={4}>
+                <FormLabel>Description</FormLabel>
+                <Textarea 
+                  id="description"
+                  name="description"
+                  value={subtaskFormik.values.description || ''} 
+                  onChange={subtaskFormik.handleChange}
+                  placeholder="Enter subtask description (optional)"
+                />
+              </FormControl>
+              
+              <FormControl mb={4}>
+                <FormLabel>Priority</FormLabel>
+                <Select
+                  id="priority"
+                  name="priority"
+                  value={subtaskFormik.values.priority}
+                  onChange={subtaskFormik.handleChange}
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </Select>
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel>Due Date</FormLabel>
+                <DatePicker
+                  selected={subtaskFormik.values.dueDate}
+                  onChange={(date) => subtaskFormik.setFieldValue('dueDate', date)}
+                  dateFormat="yyyy-MM-dd"
+                  customInput={<Input />}
+                  placeholderText="Select a due date (optional)"
+                />
+              </FormControl>
+            </form>
           </ModalBody>
           
           <ModalFooter>
@@ -895,7 +940,7 @@ const TaskDetail: React.FC = () => {
             <Button variant="outline" mr={3} onClick={onEditSubtaskClose}>
               Cancel
             </Button>
-            <Button colorScheme="brand" onClick={handleUpdateSubtask}>
+            <Button colorScheme="blue" onClick={handleUpdateSubtask}>
               Save Changes
             </Button>
           </ModalFooter>
@@ -909,7 +954,7 @@ const TaskDetail: React.FC = () => {
           <ModalHeader>AI Suggestions & Help</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            {loadingSuggestions ? (
+            {isFetchingSuggestions ? (
               <Flex justify="center" py={4}>
                 <Spinner />
                 <Text ml={3}>Generating suggestions...</Text>

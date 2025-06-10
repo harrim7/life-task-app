@@ -153,7 +153,7 @@ const Login: React.FC = () => {
               </FormControl>
               
               <Box textAlign="right">
-                <Link color="accent.500" fontSize="sm">Forgot password?</Link>
+                <Link color="yellow.500" fontSize="sm">Forgot password?</Link>
               </Box>
               
               <Button 
@@ -171,9 +171,9 @@ const Login: React.FC = () => {
               
               <Button
                 variant="outline"
-                borderColor="accent.400"
-                color="accent.500"
-                _hover={{ bg: 'accent.50' }}
+                borderColor="yellow.500"
+                color="gray.700"
+                _hover={{ bg: 'yellow.50' }}
                 size="lg"
                 width="full"
                 onClick={handleDemoLogin}
@@ -187,7 +187,7 @@ const Login: React.FC = () => {
           <Box textAlign="center" pt={4}>
             <Text fontSize="sm">
               Don't have an account?{' '}
-              <Link as={RouterLink} to="/register" color="accent.500">
+              <Link as={RouterLink} to="/register" color="brand.500">
                 Register
               </Link>
             </Text>

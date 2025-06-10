@@ -211,7 +211,7 @@ const Register: React.FC = () => {
             <Box textAlign="center" pt={4}>
               <Text fontSize="sm">
                 Already have an account?{' '}
-                <Link as={RouterLink} to="/login" color="accent.500">
+                <Link as={RouterLink} to="/login" color="brand.500">
                   Login
                 </Link>
               </Text>

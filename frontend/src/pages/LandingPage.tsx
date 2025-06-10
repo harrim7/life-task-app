@@ -28,10 +28,10 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactElement, t
       bg={useColorModeValue('white', 'gray.800')} 
       shadow="md"
       transition="all 0.3s"
-      _hover={{ transform: 'translateY(-5px)', shadow: 'lg', borderColor: 'accent.300' }}
+      _hover={{ transform: 'translateY(-5px)', shadow: 'lg', borderColor: 'yellow.500' }}
     >
       <Flex direction="column" align="center" textAlign="center">
-        <Box fontSize="3xl" color="accent.400" mb={4}>
+        <Box fontSize="3xl" color="accent.500" mb={4}>
           {icon}
         </Box>
         <Heading as="h3" size="md" mb={2} color="gray.800">{title}</Heading>
@@ -44,7 +44,7 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactElement, t
 const LandingPage: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const bgGradient = useColorModeValue(
-    'linear(to-b, brand.50, gray.50)',
+    'linear(to-b, yellow.50, gray.50)',
     'linear(to-b, gray.900, gray.800)'
   );
 
@@ -88,9 +88,9 @@ const LandingPage: React.FC = () => {
                     as={RouterLink} 
                     to="/dashboard" 
                     size="lg" 
-                    bg="accent.400"
-                    color="white"
-                    _hover={{ bg: 'accent.500' }}
+                    bg="yellow.500"
+                    color="gray.800"
+                    _hover={{ bg: 'yellow.400' }}
                     rounded="full" 
                     px={8}
                   >
@@ -102,9 +102,9 @@ const LandingPage: React.FC = () => {
                       as={RouterLink} 
                       to="/register" 
                       size="lg" 
-                      bg="accent.400"
-                      color="white"
-                      _hover={{ bg: 'accent.500' }}
+                      bg="yellow.500"
+                      color="gray.800"
+                      _hover={{ bg: 'yellow.400' }}
                       rounded="full" 
                       px={8}
                     >
@@ -189,13 +189,13 @@ const LandingPage: React.FC = () => {
       </Container>
       
       {/* CTA Section */}
-      <Box bg="accent.400" py={16} px={4}>
+      <Box bg="lime.500" py={16} px={4}>
         <Container maxW="container.md" textAlign="center">
           <VStack spacing={6}>
-            <Heading as="h2" size="xl" color="white">
+            <Heading as="h2" size="xl" color="gray.800">
               Ready to become more productive?
             </Heading>
-            <Text fontSize="lg" color="whiteAlpha.900">
+            <Text fontSize="lg" color="gray.800">
               Join thousands of users who have transformed their productivity with LifeTask AI.
               Get started for free today.
             </Text>
@@ -205,9 +205,9 @@ const LandingPage: React.FC = () => {
                   as={RouterLink} 
                   to="/dashboard" 
                   size="lg" 
-                  bg="white" 
-                  color="accent.500" 
-                  _hover={{ bg: 'gray.100' }} 
+                  bg="brand.500" 
+                  color="white" 
+                  _hover={{ bg: 'brand.600' }} 
                   rounded="full" 
                   px={8}
                 >
@@ -219,9 +219,9 @@ const LandingPage: React.FC = () => {
                     as={RouterLink} 
                     to="/register" 
                     size="lg" 
-                    bg="white" 
-                    color="accent.500" 
-                    _hover={{ bg: 'gray.100' }} 
+                    bg="brand.500" 
+                    color="white" 
+                    _hover={{ bg: 'brand.600' }} 
                     rounded="full" 
                     px={8}
                   >
@@ -232,8 +232,9 @@ const LandingPage: React.FC = () => {
                     to="/login" 
                     size="lg" 
                     variant="outline" 
-                    colorScheme="whiteAlpha" 
-                    color="white" 
+                    borderColor="brand.500" 
+                    color="brand.500" 
+                    _hover={{ bg: 'brand.50' }}
                     rounded="full"
                   >
                     Log In
@@ -251,9 +252,9 @@ const LandingPage: React.FC = () => {
           <Flex justify="space-between" direction={{ base: 'column', md: 'row' }} align="center" textAlign={{ base: 'center', md: 'left' }}>
             <Text>&copy; {new Date().getFullYear()} LifeTask AI. All rights reserved.</Text>
             <HStack spacing={6} mt={{ base: 4, md: 0 }}>
-              <Text as="a" href="#" color="accent.300">Privacy Policy</Text>
-              <Text as="a" href="#" color="accent.300">Terms of Service</Text>
-              <Text as="a" href="#" color="accent.300">Contact</Text>
+              <Text as="a" href="#" color="yellow.300">Privacy Policy</Text>
+              <Text as="a" href="#" color="yellow.300">Terms of Service</Text>
+              <Text as="a" href="#" color="yellow.300">Contact</Text>
             </HStack>
           </Flex>
         </Container>

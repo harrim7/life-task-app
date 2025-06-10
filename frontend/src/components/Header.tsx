@@ -11,6 +11,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
   const bgColor = useColorModeValue('brand.500', 'brand.700');
   const textColor = useColorModeValue('white', 'white');
   const buttonHoverBg = useColorModeValue('brand.600', 'brand.400');
+  const accentColor = useColorModeValue('yellow.500', 'yellow.400');
 
   return (
     <Box as="header" bg={bgColor} color={textColor} px={4} py={3} boxShadow="md">
@@ -25,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
               <Button as={RouterLink} to="/dashboard" variant="ghost" color="white" _hover={{ bg: buttonHoverBg }}>
                 Dashboard
               </Button>
-              <Button variant="outline" color="white" borderColor="white" _hover={{ bg: buttonHoverBg }} onClick={onLogout}>
+              <Button variant="outline" color="white" borderColor="yellow.500" _hover={{ bg: 'yellow.500', color: 'gray.800' }} onClick={onLogout}>
                 Logout
               </Button>
             </>
@@ -34,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
               <Button as={RouterLink} to="/login" variant="ghost" color="white" _hover={{ bg: buttonHoverBg }}>
                 Login
               </Button>
-              <Button as={RouterLink} to="/register" variant="outline" color="white" borderColor="white" _hover={{ bg: buttonHoverBg }}>
+              <Button as={RouterLink} to="/register" variant="outline" color="white" borderColor="yellow.500" _hover={{ bg: 'yellow.500', color: 'gray.800' }}>
                 Register
               </Button>
             </>

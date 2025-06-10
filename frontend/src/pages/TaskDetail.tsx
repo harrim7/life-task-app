@@ -36,6 +36,9 @@ import 'react-datepicker/dist/react-datepicker.css';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 
+// Components
+import Layout from '../components/Layout';
+
 // Hooks
 import { useTask, Task, Subtask } from '../context/TaskContext';
 
@@ -464,15 +467,16 @@ const TaskDetail: React.FC = () => {
   };
   
   return (
-    <Box>
-      <Flex align="center" mb={6}>
-        <IconButton
-          aria-label="Back to dashboard"
-          icon={<FiArrowLeft />}
-          variant="ghost"
-          mr={2}
-          onClick={() => navigate('/')}
-        />
+    <Layout>
+      <Box>
+        <Flex align="center" mb={6}>
+          <IconButton
+            aria-label="Back to dashboard"
+            icon={<FiArrowLeft />}
+            variant="ghost"
+            mr={2}
+            onClick={() => navigate('/')}
+          />
         <Heading size="lg" flex="1">
           {isEditing ? (
             <Input 
@@ -969,6 +973,7 @@ const TaskDetail: React.FC = () => {
         </ModalContent>
       </Modal>
     </Box>
+    </Layout>
   );
 };
 

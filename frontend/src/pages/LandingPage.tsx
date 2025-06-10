@@ -363,13 +363,12 @@ const LandingPage: React.FC = () => {
                 color="gray.800"
                 lineHeight="1.2"
               >
-                Transform overwhelming projects into achievable steps
+                Organize your life with AI-powered task management
               </Heading>
               
               <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.300')}>
-                Stop feeling paralyzed by large, complex projects. LifeTask AI breaks down
-                your biggest challenges into clear, manageable steps and helps you prioritize
-                exactly what to do next.
+                LifeTask AI helps you break down complex tasks, prioritize effectively,
+                and receive intelligent suggestions for improved productivity.
               </Text>
               
               <HStack spacing={4} pt={4}>
@@ -437,24 +436,56 @@ const LandingPage: React.FC = () => {
         </Container>
       </Box>
       
-      {/* Problem-Solution Section */}
+      {/* Features Section */}
+      <Container maxW="container.xl" py={20}>
+        <VStack spacing={16}>
+          <VStack spacing={4} textAlign="center" maxW="container.md" mx="auto">
+            <Heading as="h2" size="xl">Features designed for productivity</Heading>
+            <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.400')}>
+              LifeTask AI combines powerful task management with artificial intelligence to help you accomplish more
+            </Text>
+          </VStack>
+          
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={10} width="full">
+            <FeatureCard 
+              icon={<Icon as={FiCpu} />} 
+              title="AI Task Breakdown" 
+              description="Let AI break down complex tasks into manageable subtasks automatically"
+            />
+            <FeatureCard 
+              icon={<Icon as={FiList} />} 
+              title="Smart Task Organization" 
+              description="Organize tasks by priority, category, and status for maximum clarity"
+            />
+            <FeatureCard 
+              icon={<Icon as={FiBell} />} 
+              title="Intelligent Reminders" 
+              description="Get timely reminders for important tasks and deadlines"
+            />
+            <FeatureCard 
+              icon={<Icon as={FiCalendar} />} 
+              title="Visual Timeline" 
+              description="See your tasks and deadlines in an intuitive calendar view"
+            />
+            <FeatureCard 
+              icon={<Icon as={FiPieChart} />} 
+              title="Progress Tracking" 
+              description="Track completion rates and productivity patterns over time"
+            />
+            <FeatureCard 
+              icon={<Icon as={FiCheckCircle} />} 
+              title="Achievement System" 
+              description="Stay motivated with achievements and productivity insights"
+            />
+          </SimpleGrid>
+        </VStack>
+      </Container>
+
+      {/* Solution Section */}
       <Box bg={useColorModeValue('white', 'gray.800')} py={16} px={4}>
         <Container maxW="container.xl">
           <VStack spacing={12}>
             <VStack spacing={4} textAlign="center" maxW="container.md" mx="auto">
-              <Badge colorScheme="red" fontSize="md" px={3} py={1} borderRadius="full">
-                THE PROBLEM
-              </Badge>
-              <Heading as="h2" size="xl">Why do big projects feel so overwhelming?</Heading>
-              <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.400')}>
-                Most people struggle to complete large projects because they don't know how to 
-                break them down effectively or decide what to do first.
-              </Text>
-            </VStack>
-            
-            <BeforeAfterPanel />
-            
-            <VStack spacing={4} textAlign="center" maxW="container.md" mx="auto" pt={8}>
               <Badge colorScheme="green" fontSize="md" px={3} py={1} borderRadius="full">
                 THE SOLUTION
               </Badge>
@@ -746,16 +777,15 @@ const LandingPage: React.FC = () => {
       </Container>
       
       {/* CTA Section */}
-      <Box bg="yellow.500" py={16} px={4}>
+      <Box bg="lime.500" py={16} px={4}>
         <Container maxW="container.md" textAlign="center">
-          <VStack spacing={8}>
-            <Icon as={FiLifeBuoy} boxSize={16} color="gray.800" />
+          <VStack spacing={6}>
             <Heading as="h2" size="xl" color="gray.800">
-              Stop feeling overwhelmed by big projects
+              Ready to become more productive?
             </Heading>
-            <Text fontSize="xl" color="gray.800" maxW="container.sm" mx="auto">
-              Join thousands of users who have transformed overwhelming projects into achievable steps.
-              Start breaking down your biggest challenges today.
+            <Text fontSize="lg" color="gray.800">
+              Join thousands of users who have transformed their productivity with LifeTask AI.
+              Get started for free today.
             </Text>
             <HStack spacing={4} pt={4}>
               {isAuthenticated ? (

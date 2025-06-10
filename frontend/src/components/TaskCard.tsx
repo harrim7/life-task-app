@@ -30,11 +30,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'red';
+        return 'accent';
       case 'medium':
         return 'orange';
       case 'low':
-        return 'green';
+        return 'brand';
       default:
         return 'gray';
     }
@@ -44,13 +44,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'green';
+        return 'brand';
       case 'in_progress':
         return 'blue';
       case 'not_started':
         return 'gray';
       case 'deferred':
-        return 'purple';
+        return 'accent';
       default:
         return 'gray';
     }
@@ -108,7 +108,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
           <Progress 
             value={calculateProgress(task)} 
             size="xs" 
-            colorScheme="blue" 
+            colorScheme="brand" 
             mb={2} 
           />
           <Flex justify="space-between" fontSize="xs" color="gray.500">

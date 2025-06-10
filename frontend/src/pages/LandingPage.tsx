@@ -28,13 +28,13 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactElement, t
       bg={useColorModeValue('white', 'gray.800')} 
       shadow="md"
       transition="all 0.3s"
-      _hover={{ transform: 'translateY(-5px)', shadow: 'lg' }}
+      _hover={{ transform: 'translateY(-5px)', shadow: 'lg', borderColor: 'accent.300' }}
     >
       <Flex direction="column" align="center" textAlign="center">
-        <Box fontSize="3xl" color="brand.500" mb={4}>
+        <Box fontSize="3xl" color="accent.400" mb={4}>
           {icon}
         </Box>
-        <Heading as="h3" size="md" mb={2}>{title}</Heading>
+        <Heading as="h3" size="md" mb={2} color="gray.800">{title}</Heading>
         <Text color={useColorModeValue('gray.600', 'gray.400')}>{description}</Text>
       </Flex>
     </Box>
@@ -44,7 +44,7 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactElement, t
 const LandingPage: React.FC = () => {
   const { isAuthenticated, logout } = useAuth();
   const bgGradient = useColorModeValue(
-    'linear(to-b, brand.50, white)',
+    'linear(to-b, brand.50, gray.50)',
     'linear(to-b, gray.900, gray.800)'
   );
 
@@ -88,7 +88,9 @@ const LandingPage: React.FC = () => {
                     as={RouterLink} 
                     to="/dashboard" 
                     size="lg" 
-                    colorScheme="brand" 
+                    bg="accent.400"
+                    color="white"
+                    _hover={{ bg: 'accent.500' }}
                     rounded="full" 
                     px={8}
                   >
@@ -100,7 +102,9 @@ const LandingPage: React.FC = () => {
                       as={RouterLink} 
                       to="/register" 
                       size="lg" 
-                      colorScheme="brand" 
+                      bg="accent.400"
+                      color="white"
+                      _hover={{ bg: 'accent.500' }}
                       rounded="full" 
                       px={8}
                     >
@@ -111,7 +115,9 @@ const LandingPage: React.FC = () => {
                       to="/login" 
                       size="lg" 
                       variant="outline" 
-                      colorScheme="brand" 
+                      borderColor="brand.500"
+                      color="brand.500"
+                      _hover={{ bg: 'brand.50' }}
                       rounded="full"
                     >
                       Log In
@@ -183,7 +189,7 @@ const LandingPage: React.FC = () => {
       </Container>
       
       {/* CTA Section */}
-      <Box bg="brand.500" py={16} px={4}>
+      <Box bg="accent.400" py={16} px={4}>
         <Container maxW="container.md" textAlign="center">
           <VStack spacing={6}>
             <Heading as="h2" size="xl" color="white">
@@ -200,7 +206,7 @@ const LandingPage: React.FC = () => {
                   to="/dashboard" 
                   size="lg" 
                   bg="white" 
-                  color="brand.500" 
+                  color="accent.500" 
                   _hover={{ bg: 'gray.100' }} 
                   rounded="full" 
                   px={8}
@@ -214,7 +220,7 @@ const LandingPage: React.FC = () => {
                     to="/register" 
                     size="lg" 
                     bg="white" 
-                    color="brand.500" 
+                    color="accent.500" 
                     _hover={{ bg: 'gray.100' }} 
                     rounded="full" 
                     px={8}
@@ -240,14 +246,14 @@ const LandingPage: React.FC = () => {
       </Box>
       
       {/* Footer */}
-      <Box bg={useColorModeValue('gray.50', 'gray.900')} py={10}>
+      <Box bg={useColorModeValue('gray.800', 'gray.900')} py={10} color="white">
         <Container maxW="container.xl">
           <Flex justify="space-between" direction={{ base: 'column', md: 'row' }} align="center" textAlign={{ base: 'center', md: 'left' }}>
             <Text>&copy; {new Date().getFullYear()} LifeTask AI. All rights reserved.</Text>
             <HStack spacing={6} mt={{ base: 4, md: 0 }}>
-              <Text as="a" href="#" color="brand.500">Privacy Policy</Text>
-              <Text as="a" href="#" color="brand.500">Terms of Service</Text>
-              <Text as="a" href="#" color="brand.500">Contact</Text>
+              <Text as="a" href="#" color="accent.300">Privacy Policy</Text>
+              <Text as="a" href="#" color="accent.300">Terms of Service</Text>
+              <Text as="a" href="#" color="accent.300">Contact</Text>
             </HStack>
           </Flex>
         </Container>

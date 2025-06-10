@@ -195,7 +195,9 @@ const Register: React.FC = () => {
                 
                 <Button 
                   type="submit" 
-                  colorScheme="blue" 
+                  bg="brand.500"
+                  color="white"
+                  _hover={{ bg: 'brand.600' }}
                   size="lg" 
                   width="full" 
                   mt={4}
@@ -209,7 +211,7 @@ const Register: React.FC = () => {
             <Box textAlign="center" pt={4}>
               <Text fontSize="sm">
                 Already have an account?{' '}
-                <Link as={RouterLink} to="/login" color="brand.500">
+                <Link as={RouterLink} to="/login" color="accent.500">
                   Login
                 </Link>
               </Text>

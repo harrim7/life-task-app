@@ -21,21 +21,53 @@ import { TaskProvider } from './context/TaskContext';
 const theme = extendTheme({
   colors: {
     brand: {
-      50: '#e6f7ff',
-      100: '#b3e0ff',
-      200: '#80caff',
-      300: '#4db3ff',
-      400: '#1a9dff',
-      500: '#0080ff', // Primary color
-      600: '#0066cc',
-      700: '#004d99',
-      800: '#003366',
-      900: '#001a33',
+      50: '#e6f7f7',
+      100: '#c1e9e8',
+      200: '#9cdbd9',
+      300: '#77cdca',
+      400: '#52bfbb',
+      500: '#09757a', // Primary teal color
+      600: '#086e72',
+      700: '#06565a',
+      800: '#053f42',
+      900: '#03282a',
+    },
+    accent: {
+      50: '#f9e6f5',
+      100: '#f0bfe7',
+      200: '#e799d9',
+      300: '#de72ca',
+      400: '#d465c5', // Primary pink color
+      500: '#c94eb9',
+      600: '#b243a2',
+      700: '#8f358a',
+      800: '#6b2865',
+      900: '#471b43',
+    },
+    gray: {
+      50: '#f2f2f2',
+      100: '#e6e6e6',
+      200: '#cccccc',
+      300: '#b3b3b3',
+      400: '#999999',
+      500: '#808080',
+      600: '#666666',
+      700: '#4d4d4d',
+      800: '#2b2b2b', // Dark gray
+      900: '#111111', // Near black
     },
   },
   fonts: {
     heading: '"Inter", sans-serif',
     body: '"Inter", sans-serif',
+  },
+  styles: {
+    global: {
+      body: {
+        bg: 'gray.50',
+        color: 'gray.900',
+      },
+    },
   },
 });
 

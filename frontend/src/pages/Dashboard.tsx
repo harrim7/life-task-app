@@ -98,11 +98,11 @@ const Dashboard: React.FC = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'red';
+        return 'accent';
       case 'medium':
         return 'orange';
       case 'low':
-        return 'green';
+        return 'brand';
       default:
         return 'gray';
     }
@@ -112,13 +112,13 @@ const Dashboard: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'green';
+        return 'brand';
       case 'in_progress':
         return 'blue';
       case 'not_started':
         return 'gray';
       case 'deferred':
-        return 'purple';
+        return 'accent';
       default:
         return 'gray';
     }
@@ -176,7 +176,9 @@ const Dashboard: React.FC = () => {
             <Button 
               as={RouterLink}
               to="/tasks/create"
-              colorScheme="blue"
+              bg="accent.400"
+              color="white"
+              _hover={{ bg: 'accent.500' }}
               leftIcon={<FiPlusCircle />}
               size="sm"
             >
@@ -202,7 +204,7 @@ const Dashboard: React.FC = () => {
           <Stat>
             <StatLabel>Completion</StatLabel>
             <StatNumber>{completionPercentage}%</StatNumber>
-            <Progress value={completionPercentage} size="xs" colorScheme="green" mt={2} />
+            <Progress value={completionPercentage} size="xs" colorScheme="brand" mt={2} />
           </Stat>
           <Stat>
             <StatLabel>High Priority</StatLabel>
@@ -265,7 +267,9 @@ const Dashboard: React.FC = () => {
           <Button 
             as={RouterLink}
             to="/tasks/create"
-            colorScheme="blue"
+            bg="accent.400"
+            color="white"
+            _hover={{ bg: 'accent.500' }}
             leftIcon={<FiPlusCircle />}
           >
             Create Your First Task
@@ -318,7 +322,7 @@ const Dashboard: React.FC = () => {
                   <Progress 
                     value={calculateProgress(task)} 
                     size="xs" 
-                    colorScheme="blue" 
+                    colorScheme="brand" 
                     mb={2} 
                   />
                   <Flex justify="space-between" fontSize="xs" color="gray.500">
@@ -335,7 +339,7 @@ const Dashboard: React.FC = () => {
                   Due: {formatDate(task.dueDate)}
                 </Text>
                 {task.status === 'completed' && (
-                  <Badge colorScheme="green" display="flex" alignItems="center">
+                  <Badge colorScheme="brand" display="flex" alignItems="center">
                     <FiCheck size={12} style={{ marginRight: 4 }} /> Completed
                   </Badge>
                 )}

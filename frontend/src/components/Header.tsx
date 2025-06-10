@@ -10,6 +10,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {} }) => {
   const bgColor = useColorModeValue('brand.500', 'brand.700');
   const textColor = useColorModeValue('white', 'white');
+  const buttonHoverBg = useColorModeValue('brand.600', 'brand.400');
 
   return (
     <Box as="header" bg={bgColor} color={textColor} px={4} py={3} boxShadow="md">
@@ -21,19 +22,19 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
         <HStack spacing={4}>
           {isLoggedIn ? (
             <>
-              <Button as={RouterLink} to="/dashboard" variant="ghost" color="white" _hover={{ bg: 'brand.400' }}>
+              <Button as={RouterLink} to="/dashboard" variant="ghost" color="white" _hover={{ bg: buttonHoverBg }}>
                 Dashboard
               </Button>
-              <Button variant="outline" color="white" borderColor="white" _hover={{ bg: 'brand.400' }} onClick={onLogout}>
+              <Button variant="outline" color="white" borderColor="white" _hover={{ bg: buttonHoverBg }} onClick={onLogout}>
                 Logout
               </Button>
             </>
           ) : (
             <>
-              <Button as={RouterLink} to="/login" variant="ghost" color="white" _hover={{ bg: 'brand.400' }}>
+              <Button as={RouterLink} to="/login" variant="ghost" color="white" _hover={{ bg: buttonHoverBg }}>
                 Login
               </Button>
-              <Button as={RouterLink} to="/register" variant="outline" color="white" borderColor="white" _hover={{ bg: 'brand.400' }}>
+              <Button as={RouterLink} to="/register" variant="outline" color="white" borderColor="white" _hover={{ bg: buttonHoverBg }}>
                 Register
               </Button>
             </>

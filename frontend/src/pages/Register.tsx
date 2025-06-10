@@ -76,7 +76,10 @@ const Register: React.FC = () => {
           isClosable: true
         });
         
-        navigate('/dashboard');
+        // Small delay to ensure token is properly set before navigation
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 300);
       } catch (error) {
         toast({
           title: 'Registration failed',

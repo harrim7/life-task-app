@@ -193,12 +193,18 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
   // Fetch all tasks (initial load and refresh)
   useEffect(() => {
     if (isAuthenticated) {
-      fetchTasks();
+      // Add delay before fetching tasks
+      const timer = setTimeout(() => {
+        fetchTasks();
+      }, 500); // 500ms delay
+      
+      // Clean up timer if component unmounts
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated]);
   
-  // Fetch all tasks
-  const fetchTasks = async () => {
+  // Fetch all tasks with retry mechanism
+  const fetchTasks = async (retryCount = 0) => {
     setLoading(true);
     setError(null);
     
@@ -207,6 +213,16 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       setTasks(response.data);
     } catch (err) {
       console.error('Error fetching tasks:', err);
+      
+      // Retry logic - attempt up to 3 retries with increasing delay
+      if (retryCount < 3) {
+        console.log(`Retrying fetch tasks (attempt ${retryCount + 1})...`);
+        setTimeout(() => {
+          fetchTasks(retryCount + 1);
+        }, 1000 * (retryCount + 1)); // Exponential backoff: 1s, 2s, 3s
+        return; // Exit early, don't set loading to false yet
+      }
+      
       setError('Failed to load tasks. Please try again later.');
       
       // Fallback to mock data in development
@@ -215,7 +231,9 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         setTasks(mockTasks);
       }
     } finally {
-      setLoading(false);
+      if (retryCount === 0 || retryCount >= 3) {
+        setLoading(false);
+      }
     }
   };
   

@@ -192,10 +192,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   // Set up axios interceptor for authentication
   useEffect(() => {
+    // Remove any existing interceptors first to avoid duplicates
+    axios.interceptors.request.handlers = [];
+    
     const interceptor = axios.interceptors.request.use(
       config => {
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        // Get the most current token from localStorage
+        const currentToken = localStorage.getItem('token');
+        if (currentToken) {
+          config.headers.Authorization = `Bearer ${currentToken}`;
         }
         return config;
       },
@@ -205,7 +210,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       axios.interceptors.request.eject(interceptor);
     };
-  }, [token]);
+  }, []);
   
   // Context value
   const value = {

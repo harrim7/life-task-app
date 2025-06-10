@@ -61,7 +61,10 @@ const Login: React.FC = () => {
           isClosable: true
         });
         
-        navigate('/dashboard');
+        // Small delay to ensure token is properly set before navigation
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 300);
       } catch (error) {
         toast({
           title: 'Login failed',
@@ -91,7 +94,10 @@ const Login: React.FC = () => {
         isClosable: true
       });
       
-      navigate('/dashboard');
+      // Small delay to ensure token is properly set before navigation
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 300);
     } catch (error) {
       toast({
         title: 'Demo Login Failed',

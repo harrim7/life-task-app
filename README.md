@@ -42,15 +42,9 @@ LifeTask AI is a modern task management application that leverages AI to help us
    cd life-task-ai
    ```
 
-2. Install dependencies for both frontend and backend
+2. Install all dependencies
    ```
-   # Install backend dependencies
-   cd backend
-   npm install
-
-   # Install frontend dependencies
-   cd ../frontend
-   npm install
+   npm run install:all
    ```
 
 3. Set up environment variables
@@ -59,14 +53,54 @@ LifeTask AI is a modern task management application that leverages AI to help us
 
 4. Start the development servers
    ```
-   # Start backend server (from backend directory)
+   # Start both servers with concurrently
    npm run dev
-
-   # Start frontend server (from frontend directory)
-   npm start
+   
+   # Or start them separately
+   npm run start:backend
+   npm run start:frontend
    ```
 
 5. Open your browser and navigate to `http://localhost:3000`
+
+### Deployment to Heroku
+
+1. Create a Heroku account and install the Heroku CLI
+   ```
+   npm install -g heroku
+   heroku login
+   ```
+
+2. Create a new Heroku app
+   ```
+   heroku create lifetask-ai-app
+   ```
+
+3. Use the deployment script
+   ```
+   ./deploy.sh
+   ```
+   The script will:
+   - Prompt for your MongoDB URI, JWT secret, and OpenAI API key
+   - Set up the necessary environment variables in Heroku
+   - Push your code to Heroku
+   - Build and deploy the application
+
+4. Alternatively, set up environment variables manually and deploy
+   ```
+   heroku config:set MONGODB_URI=your_mongodb_uri
+   heroku config:set JWT_SECRET=your_jwt_secret
+   heroku config:set OPENAI_API_KEY=your_openai_api_key
+   heroku config:set NODE_ENV=production
+   heroku config:set NODE_OPTIONS=--openssl-legacy-provider
+   
+   git push heroku main
+   ```
+
+5. Open your deployed app
+   ```
+   heroku open
+   ```
 
 ## Usage Example
 

@@ -9,21 +9,39 @@ if ! command -v heroku &> /dev/null; then
     exit 1
 fi
 
-# Build frontend
-echo "Building frontend..."
-cd frontend && npm run build && cd ..
+# Set Heroku config variables
+echo "Setting up Heroku environment variables..."
+read -p "Enter your MongoDB URI: " mongodb_uri
+read -p "Enter your JWT secret (leave blank to generate one): " jwt_secret
+read -p "Enter your OpenAI API key: " openai_key
 
-# Check if .env file exists in backend
-if [ ! -f ./backend/.env ]; then
-    echo "Creating sample .env file in backend directory..."
-    cat > ./backend/.env << EOF
-MONGODB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret
-OPENAI_API_KEY=your_openai_api_key
-NODE_ENV=production
-EOF
-    echo "WARNING: You need to update the .env file with your actual credentials!"
+if [ -z "$jwt_secret" ]; then
+    echo "Generating a JWT secret..."
+    jwt_secret=$(node -e "console.log(require('crypto').randomBytes(64).toString('hex'))")
+    echo "Generated JWT secret: $jwt_secret"
 fi
+
+heroku config:set MONGODB_URI="$mongodb_uri"
+heroku config:set JWT_SECRET="$jwt_secret"
+heroku config:set OPENAI_API_KEY="$openai_key"
+heroku config:set NODE_ENV=production
+heroku config:set NODE_OPTIONS=--openssl-legacy-provider
+
+# Create local .env file if it doesn't exist
+if [ ! -f ./backend/.env ]; then
+    echo "Creating .env file in backend directory..."
+    cat > ./backend/.env << EOF
+MONGODB_URI=$mongodb_uri
+JWT_SECRET=$jwt_secret
+OPENAI_API_KEY=$openai_key
+NODE_ENV=development
+EOF
+    echo "Local .env file created."
+fi
+
+# Install dependencies
+echo "Installing dependencies..."
+npm run install:all
 
 # Add and commit changes
 echo "Committing changes..."
@@ -35,7 +53,4 @@ echo "Pushing to Heroku..."
 git push heroku main
 
 echo "Deployment complete! Your app should be live at your Heroku URL."
-echo "Note: You might need to run the following commands for initial setup:"
-echo "  heroku config:set MONGODB_URI=your_mongodb_uri"
-echo "  heroku config:set JWT_SECRET=your_jwt_secret"
-echo "  heroku config:set OPENAI_API_KEY=your_openai_api_key"
+echo "You can check the app with: heroku open"

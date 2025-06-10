@@ -33,7 +33,7 @@ exports.breakdownTask = async (req, res) => {
         const newSubtask = {
           title: subtask.title,
           description: subtask.description,
-          priority: subtask.priority,
+          priority: subtask.priority ? subtask.priority.toLowerCase() : 'medium',
           dueDate: subtask.dueDate 
             ? new Date(Date.now() + subtask.dueDate * 24 * 60 * 60 * 1000) // Convert days to milliseconds
             : undefined

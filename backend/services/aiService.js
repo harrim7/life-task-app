@@ -56,7 +56,14 @@ async function breakdownTask(taskTitle, taskDescription) {
       // Try to find JSON in the response
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
-        return { subtasks: JSON.parse(jsonMatch[0]) };
+        const subtasks = JSON.parse(jsonMatch[0]);
+        // Normalize priority values to lowercase
+        subtasks.forEach(subtask => {
+          if (subtask.priority) {
+            subtask.priority = subtask.priority.toLowerCase();
+          }
+        });
+        return { subtasks };
       } else {
         // Fallback to a simple parsing approach
         return { 
@@ -144,7 +151,14 @@ async function prioritizeTasks(tasks) {
       // Try to extract JSON
       const jsonMatch = content.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
-        return { prioritizedTasks: JSON.parse(jsonMatch[0]) };
+        const prioritizedTasks = JSON.parse(jsonMatch[0]);
+        // Normalize priority values to lowercase
+        prioritizedTasks.forEach(task => {
+          if (task.priority) {
+            task.priority = task.priority.toLowerCase();
+          }
+        });
+        return { prioritizedTasks };
       } else {
         // Return the original tasks with default priorities
         return { 

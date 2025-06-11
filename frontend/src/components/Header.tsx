@@ -12,7 +12,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
   
-  const bgColor = useColorModeValue('white', 'gray.800');
+  const bgColor = useColorModeValue(isLandingPage ? '#fbf9f1' : 'white', 'gray.800');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const buttonHoverBg = useColorModeValue('gray.100', 'gray.700');
   const accentColor = useColorModeValue('yellow.500', 'yellow.400');
@@ -33,8 +33,8 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
   }, []);
 
   // Determine padding based on whether we're on the landing page and if scrolled
-  const paddingTop = isLandingPage && !scrolled ? 6 : 2;
-  const paddingBottom = isLandingPage && !scrolled ? 6 : 2;
+  const paddingTop = isLandingPage ? (scrolled ? 2 : 3) : 2;
+  const paddingBottom = isLandingPage ? (scrolled ? 2 : 16) : 2;
   const boxShadow = scrolled ? "md" : "none";
   const transition = "all 0.3s ease";
 

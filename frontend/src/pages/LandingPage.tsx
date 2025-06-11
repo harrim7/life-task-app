@@ -338,7 +338,7 @@ const LandingPage: React.FC = () => {
       <Header isLoggedIn={isAuthenticated} onLogout={logout} />
       
       {/* Hero Section */}
-      <Box bgGradient={bgGradient} py={20} px={4}>
+      <Box bgGradient={bgGradient} pt={40} pb={20} px={4}>
         <Container maxW="container.xl">
           <Flex 
             direction={{ base: 'column', lg: 'row' }} 

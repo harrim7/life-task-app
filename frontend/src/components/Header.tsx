@@ -33,9 +33,15 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
   }, []);
 
   // Determine padding based on whether we're on the landing page and if scrolled
-  const paddingY = isLandingPage && !scrolled ? 14 : 3;
+  const paddingTop = isLandingPage && !scrolled ? 6 : 2;
+  const paddingBottom = isLandingPage && !scrolled ? 6 : 2;
   const boxShadow = scrolled ? "md" : "none";
   const transition = "all 0.3s ease";
+
+  // Scale down the header text when scrolled (70% of original size)
+  const headingSize = isLandingPage && !scrolled ? "xl" : "md";
+  const buttonSize = scrolled ? "sm" : "md";
+  const buttonPadding = scrolled ? "0.5rem 0.75rem" : undefined;
 
   return (
     <Box 
@@ -43,41 +49,90 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
       bg={bgColor} 
       color={textColor} 
       px={4} 
-      py={paddingY} 
+      pt={paddingTop}
+      pb={paddingBottom}
       boxShadow={boxShadow}
       position="sticky"
       top={0}
       zIndex={1000}
       transition={transition}
+      height={scrolled ? "auto" : undefined}
     >
-      <Flex maxW="container.xl" mx="auto" align="center" justify="space-between">
+      <Flex 
+        maxW="container.xl" 
+        mx="auto" 
+        justify="space-between"
+        align="flex-start" // Align items to the top of the header
+      >
         <Heading 
           as={RouterLink} 
           to="/" 
-          size={isLandingPage && !scrolled ? "xl" : "lg"} 
+          size={headingSize} 
           fontWeight="bold" 
           _hover={{ textDecoration: 'none' }}
           transition={transition}
+          mt={1} // Keep the heading near the top
         >
           LifeTask AI
         </Heading>
         
-        <HStack spacing={4}>
+        <HStack spacing={3} mt={1}> {/* Reduced spacing and kept near top */}
           {isLoggedIn ? (
             <>
-              <Button as={RouterLink} to="/dashboard" variant="ghost" color={textColor} _hover={{ bg: buttonHoverBg }}>
+              <Button 
+                as={RouterLink} 
+                to="/dashboard" 
+                variant="ghost" 
+                color={textColor} 
+                _hover={{ bg: buttonHoverBg }}
+                size={buttonSize}
+                px={buttonPadding}
+                py={scrolled ? 1 : undefined}
+                transition={transition}
+              >
                 Dashboard
               </Button>
-              <Button variant="outline" color={textColor} borderColor="yellow.500" _hover={{ bg: 'yellow.500', color: 'gray.800' }} onClick={onLogout}>
+              <Button 
+                variant="outline" 
+                color={textColor} 
+                borderColor="yellow.500" 
+                _hover={{ bg: 'yellow.500', color: 'gray.800' }} 
+                onClick={onLogout}
+                size={buttonSize}
+                px={buttonPadding}
+                py={scrolled ? 1 : undefined}
+                transition={transition}
+              >
                 Logout
               </Button>
             </>
           ) : (
             <>
-              <Button as={RouterLink} to="/login" variant="ghost" color={textColor} _hover={{ bg: buttonHoverBg }}>
+              <Button 
+                as={RouterLink} 
+                to="/login" 
+                variant="ghost" 
+                color={textColor} 
+                _hover={{ bg: buttonHoverBg }}
+                size={buttonSize}
+                px={buttonPadding}
+                py={scrolled ? 1 : undefined}
+                transition={transition}
+              >
                 Login
               </Button>
-              <Button as={RouterLink} to="/register" variant="outline" color={textColor} borderColor="yellow.500" _hover={{ bg: 'yellow.500', color: 'gray.800' }}>
+              <Button 
+                as={RouterLink} 
+                to="/register" 
+                variant="outline" 
+                color={textColor} 
+                borderColor="yellow.500" 
+                _hover={{ bg: 'yellow.500', color: 'gray.800' }}
+                size={buttonSize}
+                px={buttonPadding}
+                py={scrolled ? 1 : undefined}
+                transition={transition}
+              >
                 Register
               </Button>
             </>

@@ -90,6 +90,8 @@ const TaskDetail: React.FC = () => {
   const [subtaskSuggestions, setSubtaskSuggestions] = useState<string | null>(null);
   const [currentSubtaskId, setCurrentSubtaskId] = useState<string | null>(null);
   const [isFetchingSubtaskSuggestions, setIsFetchingSubtaskSuggestions] = useState(false);
+  const [userQuestion, setUserQuestion] = useState<string>('');
+  const [showCustomQuestion, setShowCustomQuestion] = useState<boolean>(false);
   
   useEffect(() => {
     const loadTask = async () => {
@@ -340,11 +342,19 @@ const TaskDetail: React.FC = () => {
     if (!task || !id) return;
     
     setCurrentSubtaskId(subtaskId);
-    setIsFetchingSubtaskSuggestions(true);
+    setUserQuestion('');
+    setShowCustomQuestion(false);
     onSubtaskSuggestionsOpen();
+  };
+  
+  // Submit custom question about subtask
+  const handleSubmitQuestion = async () => {
+    if (!task || !id || !currentSubtaskId || !userQuestion.trim()) return;
+    
+    setIsFetchingSubtaskSuggestions(true);
     
     try {
-      const result = await generateSubtaskSuggestions(id, subtaskId);
+      const result = await generateSubtaskSuggestions(id, currentSubtaskId, userQuestion);
       setSubtaskSuggestions(result.suggestions);
       
       // Update the local task state to reflect the aiAssisted flag
@@ -352,19 +362,19 @@ const TaskDetail: React.FC = () => {
         setTask({
           ...task,
           subtasks: task.subtasks.map(st => 
-            st._id === subtaskId ? {...st, aiAssisted: true} : st
+            st._id === currentSubtaskId ? {...st, aiAssisted: true} : st
           )
         });
       }
     } catch (error) {
       toast({
-        title: 'Failed to get subtask suggestions',
+        title: 'Failed to get answer',
         description: error instanceof Error ? error.message : 'Unknown error',
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
-      setSubtaskSuggestions('Unable to generate suggestions for this subtask at this time.');
+      setSubtaskSuggestions('Unable to answer your question at this time.');
     } finally {
       setIsFetchingSubtaskSuggestions(false);
     }
@@ -1051,34 +1061,105 @@ const TaskDetail: React.FC = () => {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
+            {!showCustomQuestion && !isFetchingSubtaskSuggestions && (
+              <Box mb={4}>
+                <Flex 
+                  justify="space-between" 
+                  align="center" 
+                  bg="purple.50" 
+                  p={4} 
+                  borderRadius="md" 
+                  borderLeftWidth="4px"
+                  borderLeftColor="purple.400"
+                >
+                  <Box>
+                    <Text fontWeight="bold" color="purple.700">
+                      Ask a specific question
+                    </Text>
+                    <Text fontSize="sm" color="purple.700">
+                      For more targeted help, you can ask a specific question about this subtask.
+                    </Text>
+                  </Box>
+                  <Button 
+                    size="sm" 
+                    colorScheme="purple" 
+                    onClick={() => setShowCustomQuestion(true)}
+                  >
+                    Ask Question
+                  </Button>
+                </Flex>
+              </Box>
+            )}
+            
+            {showCustomQuestion && !isFetchingSubtaskSuggestions && (
+              <Box mb={6}>
+                <FormControl>
+                  <FormLabel fontWeight="bold">
+                    What would you like to know about this subtask?
+                  </FormLabel>
+                  <Textarea 
+                    value={userQuestion} 
+                    onChange={(e) => setUserQuestion(e.target.value)}
+                    placeholder="Example: How do I find a good plumber in my area? What tools do I need for this? What's the best way to approach this?"
+                    rows={3}
+                  />
+                  <Flex justify="flex-end" mt={2}>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      mr={2}
+                      onClick={() => setShowCustomQuestion(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      colorScheme="blue" 
+                      onClick={handleSubmitQuestion}
+                      isDisabled={!userQuestion.trim()}
+                    >
+                      Submit Question
+                    </Button>
+                  </Flex>
+                </FormControl>
+              </Box>
+            )}
+            
             {isFetchingSubtaskSuggestions ? (
               <Flex direction="column" align="center" justify="center" py={10}>
                 <Spinner size="xl" color="blue.500" thickness="4px" mb={4} />
-                <Text>Generating personalized assistance for this subtask...</Text>
+                <Text>
+                  {userQuestion 
+                    ? "Finding an answer to your question..." 
+                    : "Generating personalized assistance for this subtask..."}
+                </Text>
                 <Text fontSize="sm" color="gray.500" mt={2}>
                   I'm finding the best resources, steps, and recommendations to help you complete this subtask efficiently.
                 </Text>
               </Flex>
-            ) : (
+            ) : subtaskSuggestions ? (
               <Box>
-                <Box 
-                  bg="yellow.50" 
-                  p={4} 
-                  borderRadius="md" 
-                  mb={4} 
-                  borderLeft="4px solid" 
-                  borderLeftColor="yellow.400"
-                >
-                  <Flex align="center" mb={2}>
-                    <Icon as={FiInfo} color="yellow.600" mr={2} />
-                    <Text fontWeight="bold" color="yellow.700">How This Helps</Text>
-                  </Flex>
-                  <Text fontSize="sm">
-                    This AI-generated assistance provides personalized guidance, resource recommendations, 
-                    and step-by-step instructions to help you complete this subtask efficiently. 
-                    You can save time by following these suggestions rather than doing the research yourself.
-                  </Text>
-                </Box>
+                {!userQuestion && (
+                  <Box 
+                    bg="yellow.50" 
+                    p={4} 
+                    borderRadius="md" 
+                    mb={4} 
+                    borderLeft="4px solid" 
+                    borderLeftColor="yellow.400"
+                  >
+                    <Flex align="center" mb={2}>
+                      <Icon as={FiInfo} color="yellow.600" mr={2} />
+                      <Text fontWeight="bold" color="yellow.700">How This Helps</Text>
+                    </Flex>
+                    <Text fontSize="sm">
+                      This AI-generated assistance provides personalized guidance, resource recommendations, 
+                      and step-by-step instructions to help you complete this subtask efficiently. 
+                      You can save time by following these suggestions rather than doing the research yourself.
+                    </Text>
+                  </Box>
+                )}
+                
                 <Box 
                   bg="white" 
                   p={4} 
@@ -1103,10 +1184,16 @@ const TaskDetail: React.FC = () => {
                     }
                   }}
                 >
+                  {userQuestion && (
+                    <Box mb={4} p={3} bg="blue.50" borderRadius="md">
+                      <Text fontWeight="bold">Your question:</Text>
+                      <Text>{userQuestion}</Text>
+                    </Box>
+                  )}
                   {subtaskSuggestions}
                 </Box>
               </Box>
-            )}
+            ) : null}
           </ModalBody>
           <ModalFooter borderTop="1px solid" borderTopColor="gray.200" bg="gray.50" borderBottomRadius="md">
             <Flex width="100%" justify="space-between" align="center">
@@ -1116,6 +1203,20 @@ const TaskDetail: React.FC = () => {
                 )}
               </Text>
               <HStack>
+                {subtaskSuggestions && (
+                  <Button 
+                    variant="outline" 
+                    colorScheme="purple"
+                    onClick={() => {
+                      setUserQuestion('');
+                      setSubtaskSuggestions(null);
+                      setShowCustomQuestion(true);
+                    }}
+                    mr={2}
+                  >
+                    Ask Another Question
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   onClick={onSubtaskSuggestionsClose} 
@@ -1123,13 +1224,15 @@ const TaskDetail: React.FC = () => {
                 >
                   Close
                 </Button>
-                <Button 
-                  colorScheme="blue" 
-                  leftIcon={<FiCheckCircle />}
-                  onClick={onSubtaskSuggestionsClose}
-                >
-                  Got It
-                </Button>
+                {subtaskSuggestions && (
+                  <Button 
+                    colorScheme="blue" 
+                    leftIcon={<FiCheckCircle />}
+                    onClick={onSubtaskSuggestionsClose}
+                  >
+                    Got It
+                  </Button>
+                )}
               </HStack>
             </Flex>
           </ModalFooter>

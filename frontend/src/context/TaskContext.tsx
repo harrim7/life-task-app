@@ -174,7 +174,7 @@ interface TaskContextType {
   breakdownTask: (taskId: string) => Promise<Task>;
   prioritizeTasks: () => Promise<Task[]>;
   generateSuggestions: (taskId: string) => Promise<string>;
-  generateSubtaskSuggestions: (taskId: string, subtaskId: string) => Promise<{ suggestions: string, subtask: Subtask }>;
+  generateSubtaskSuggestions: (taskId: string, subtaskId: string, question?: string) => Promise<{ suggestions: string, subtask: Subtask }>;
 }
 
 // Create the context
@@ -705,7 +705,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
   };
 
   // Generate suggestions for a specific subtask
-  const generateSubtaskSuggestions = async (taskId: string, subtaskId: string): Promise<{ suggestions: string, subtask: Subtask }> => {
+  const generateSubtaskSuggestions = async (taskId: string, subtaskId: string, question?: string): Promise<{ suggestions: string, subtask: Subtask }> => {
     try {
       // Find the task
       const task = await getTask(taskId);
@@ -720,7 +720,12 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         throw new Error('Subtask not found');
       }
       
-      const response = await axios.post('/api/ai/subtask-suggestions', { taskId, subtaskId });
+      // Include the user's question if provided
+      const response = await axios.post('/api/ai/subtask-suggestions', { 
+        taskId, 
+        subtaskId,
+        question 
+      });
       
       // Update the task in local state with the AI-assisted subtask
       setTasks(prevTasks => 
@@ -760,14 +765,26 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         // Update the subtask in mock data
         const updatedSubtask = {...subtask, aiAssisted: true};
         
-        // Return mock suggestions
-        return {
-          suggestions: `Here are some specific suggestions for completing the subtask "${subtask.title}":\n\n` +
+        // Return mock suggestions based on whether there's a question
+        let mockResponse;
+        if (question) {
+          mockResponse = `Answer to your question: "${question}"\n\n` +
+            `Here's a detailed answer to help you complete this subtask:\n\n` +
+            `1. First, consider approaching it this way...\n` +
+            `2. You might want to look at these resources...\n` +
+            `3. A good tool for this specific question would be...\n\n` +
+            `Hope this helps! Let me know if you need more specific guidance.`;
+        } else {
+          mockResponse = `Here are some specific suggestions for completing the subtask "${subtask.title}":\n\n` +
             `1. Research best practices for this particular step\n` +
             `2. Set a 25-minute focused work session (pomodoro) for this subtask\n` +
             `3. Check these specific resources: [relevant links would be here]\n` +
             `4. Use the following technique: [specific technique for this type of subtask]\n\n` +
-            `Estimated time required: ${subtask.priority === 'high' ? '1-2' : subtask.priority === 'medium' ? '0.5-1' : '0.25-0.5'} hours`,
+            `Estimated time required: ${subtask.priority === 'high' ? '1-2' : subtask.priority === 'medium' ? '0.5-1' : '0.25-0.5'} hours`;
+        }
+        
+        return {
+          suggestions: mockResponse,
           subtask: updatedSubtask
         };
       }

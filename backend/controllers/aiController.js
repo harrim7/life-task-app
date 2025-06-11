@@ -99,7 +99,7 @@ exports.generateSuggestions = async (req, res) => {
  */
 exports.generateSubtaskSuggestions = async (req, res) => {
   try {
-    const { taskId, subtaskId } = req.body;
+    const { taskId, subtaskId, question } = req.body;
     
     if (!taskId || !subtaskId) {
       return res.status(400).json({ error: 'Task ID and subtask ID are required' });
@@ -165,7 +165,7 @@ exports.generateSubtaskSuggestions = async (req, res) => {
     };
     
     // Get suggestions with enhanced context
-    const suggestions = await aiService.generateSubtaskSuggestions(contextData, subtask);
+    const suggestions = await aiService.generateSubtaskSuggestions(contextData, subtask, question);
     
     // Mark the subtask as AI-assisted in the database
     const taskDoc = await Task.findById(taskId);

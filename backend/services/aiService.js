@@ -66,7 +66,7 @@ async function breakdownTask(taskTitle, taskDescription) {
         return { subtasks };
       } else {
         // Fallback to a simple parsing approach
-        return { 
+        return {
           subtasks: [
             {
               title: "Research & Planning",
@@ -92,7 +92,7 @@ async function breakdownTask(taskTitle, taskDescription) {
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
       // Return fallback subtasks
-      return { 
+      return {
         subtasks: [
           {
             title: "Research & Planning",
@@ -161,7 +161,7 @@ async function prioritizeTasks(tasks) {
         return { prioritizedTasks };
       } else {
         // Return the original tasks with default priorities
-        return { 
+        return {
           prioritizedTasks: tasks.map(task => ({
             ...task,
             priority: task.priority || "medium",
@@ -172,7 +172,7 @@ async function prioritizeTasks(tasks) {
     } catch (parseError) {
       console.error('Error parsing AI prioritization response:', parseError);
       // Return a fallback prioritization
-      return { 
+      return {
         prioritizedTasks: tasks.map(task => ({
           ...task,
           priority: task.priority || "medium",
@@ -218,7 +218,7 @@ async function generateSuggestions(task) {
 /**
  * Generates specific suggestions for completing a subtask
  */
-async function generateSubtaskSuggestions(contextData, subtask) {
+async function generateSubtaskSuggestions(contextData, subtask, question) {
   try {
     if (!openai) {
       console.warn('OpenAI client not initialized. Using mock data instead.');
@@ -231,18 +231,16 @@ async function generateSubtaskSuggestions(contextData, subtask) {
 
     // Extract location information if available
     const userLocation = contextData.userContext?.location || 'Unknown';
-    
+
     // Determine location-specific instructions
     const locationInstructions = userLocation && userLocation !== 'Unknown'
       ? `When mentioning local services or location-specific information, refer to the user's location: ${userLocation}.`
       : `When suggesting local services, provide general advice on how to find local providers regardless of location.`;
-    
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { 
-          role: "system", 
-          content: `You are a helpful assistant that provides specific, practical suggestions for completing subtasks. 
+
+    // Determine whether this is a general help request or a specific question
+    const isSpecificQuestion = question && question.trim().length > 0;
+
+    const systemPrompt = `You are a helpful assistant that provides specific, practical suggestions for completing subtasks. 
                     You have extensive knowledge about how to accomplish tasks efficiently and can provide detailed, 
                     actionable advice including resources, tools, services, and step-by-step instructions.
                     
@@ -250,21 +248,50 @@ async function generateSubtaskSuggestions(contextData, subtask) {
                     
                     Your goal is to make this subtask as easy as possible to complete by providing comprehensive, 
                     specific guidance. When a task is about finding services (plumbers, contractors, specialists), 
-                    provide exact search terms, websites, apps, and criteria for selection.`
+                    provide exact search terms, websites, apps, and criteria for selection.`;
+
+    // Create appropriate user prompt based on whether it's a specific question
+    let userPrompt;
+
+    if (isSpecificQuestion) {
+      userPrompt = `The user has asked the following specific question about this subtask: "${question}"
+      
+      Subtask details: ${JSON.stringify(subtask)}
+      
+      Context of the overall task:
+      ${JSON.stringify(contextData, null, 2)}
+      
+      Please provide a detailed, specific answer to their question, including:
+      1. Direct answer to their specific question
+      2. Any relevant resources, websites, apps, tools, services, or contact information that would help
+      3. Step-by-step guidance if applicable
+      4. Alternative approaches if relevant
+      
+      Format your response in a clear, organized way that directly addresses their question.`;
+    } else {
+      userPrompt = `Provide detailed, practical assistance for completing this subtask: ${JSON.stringify(subtask)}\n\n` +
+        `Here is the full context:\n${JSON.stringify(contextData, null, 2)}\n\n` +
+        `Please include ALL of the following in your response:
+        1. Step-by-step instructions for completing this specific subtask
+        2. Relevant resources, tools, or services that would help (be specific - include websites, app names, service providers, etc.)
+        3. If applicable, provide contact information or search terms for finding local services (plumbers, contractors, etc.)
+        4. If applicable, provide product recommendations or alternatives
+        5. Estimated time required and difficulty level
+        6. Common pitfalls to avoid and how to verify successful completion
+        
+        Format your response in a clear, organized way with headings and bullet points when appropriate.`;
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
         },
-        { 
-          role: "user", 
-          content: `Provide detailed, practical assistance for completing this subtask: ${JSON.stringify(subtask)}\n\n` +
-            `Here is the full context:\n${JSON.stringify(contextData, null, 2)}\n\n` +
-            `Please include ALL of the following in your response:
-            1. Step-by-step instructions for completing this specific subtask
-            2. Relevant resources, tools, or services that would help (be specific - include websites, app names, service providers, etc.)
-            3. If applicable, provide contact information or search terms for finding local services (plumbers, contractors, etc.)
-            4. If applicable, provide product recommendations or alternatives
-            5. Estimated time required and difficulty level
-            6. Common pitfalls to avoid and how to verify successful completion
-            
-            Format your response in a clear, organized way with headings and bullet points when appropriate.`
+        {
+          role: "user",
+          content: userPrompt
         }
       ],
       temperature: 0.7, // Add some creativity but keep it practical

@@ -343,7 +343,7 @@ const TaskDetail: React.FC = () => {
     
     setCurrentSubtaskId(subtaskId);
     setUserQuestion('');
-    setShowCustomQuestion(false);
+    setShowCustomQuestion(true); // Show question input immediately
     onSubtaskSuggestionsOpen();
   };
   
@@ -1061,35 +1061,6 @@ const TaskDetail: React.FC = () => {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            {!showCustomQuestion && !isFetchingSubtaskSuggestions && (
-              <Box mb={4}>
-                <Flex 
-                  justify="space-between" 
-                  align="center" 
-                  bg="purple.50" 
-                  p={4} 
-                  borderRadius="md" 
-                  borderLeftWidth="4px"
-                  borderLeftColor="purple.400"
-                >
-                  <Box>
-                    <Text fontWeight="bold" color="purple.700">
-                      Ask a specific question
-                    </Text>
-                    <Text fontSize="sm" color="purple.700">
-                      For more targeted help, you can ask a specific question about this subtask.
-                    </Text>
-                  </Box>
-                  <Button 
-                    size="sm" 
-                    colorScheme="purple" 
-                    onClick={() => setShowCustomQuestion(true)}
-                  >
-                    Ask Question
-                  </Button>
-                </Flex>
-              </Box>
-            )}
             
             {showCustomQuestion && !isFetchingSubtaskSuggestions && (
               <Box mb={6}>
@@ -1102,16 +1073,9 @@ const TaskDetail: React.FC = () => {
                     onChange={(e) => setUserQuestion(e.target.value)}
                     placeholder="Example: How do I find a good plumber in my area? What tools do I need for this? What's the best way to approach this?"
                     rows={3}
+                    autoFocus
                   />
                   <Flex justify="flex-end" mt={2}>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      mr={2}
-                      onClick={() => setShowCustomQuestion(false)}
-                    >
-                      Cancel
-                    </Button>
                     <Button 
                       size="sm" 
                       colorScheme="blue" 

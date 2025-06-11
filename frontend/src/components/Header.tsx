@@ -8,9 +8,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {} }) => {
-  const bgColor = useColorModeValue('brand.500', 'brand.700');
-  const textColor = useColorModeValue('white', 'white');
-  const buttonHoverBg = useColorModeValue('brand.600', 'brand.400');
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.800', 'gray.100');
+  const buttonHoverBg = useColorModeValue('gray.100', 'gray.700');
   const accentColor = useColorModeValue('yellow.500', 'yellow.400');
 
   return (
@@ -23,19 +23,19 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
         <HStack spacing={4}>
           {isLoggedIn ? (
             <>
-              <Button as={RouterLink} to="/dashboard" variant="ghost" color="white" _hover={{ bg: buttonHoverBg }}>
+              <Button as={RouterLink} to="/dashboard" variant="ghost" color={textColor} _hover={{ bg: buttonHoverBg }}>
                 Dashboard
               </Button>
-              <Button variant="outline" color="white" borderColor="yellow.500" _hover={{ bg: 'yellow.500', color: 'gray.800' }} onClick={onLogout}>
+              <Button variant="outline" color={textColor} borderColor="yellow.500" _hover={{ bg: 'yellow.500', color: 'gray.800' }} onClick={onLogout}>
                 Logout
               </Button>
             </>
           ) : (
             <>
-              <Button as={RouterLink} to="/login" variant="ghost" color="white" _hover={{ bg: buttonHoverBg }}>
+              <Button as={RouterLink} to="/login" variant="ghost" color={textColor} _hover={{ bg: buttonHoverBg }}>
                 Login
               </Button>
-              <Button as={RouterLink} to="/register" variant="outline" color="white" borderColor="yellow.500" _hover={{ bg: 'yellow.500', color: 'gray.800' }}>
+              <Button as={RouterLink} to="/register" variant="outline" color={textColor} borderColor="yellow.500" _hover={{ bg: 'yellow.500', color: 'gray.800' }}>
                 Register
               </Button>
             </>

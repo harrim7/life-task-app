@@ -1,0 +1,36 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#logoGradient)" opacity="0.1"/>
+  
+  <!-- Brain icon -->
+  <path d="M100 40 C120 40, 140 50, 140 70 C140 85, 130 95, 120 100 C130 105, 140 115, 140 130 C140 150, 120 160, 100 160 C80 160, 60 150, 60 130 C60 115, 70 105, 80 100 C70 95, 60 85, 60 70 C60 50, 80 40, 100 40 Z" 
+        fill="url(#logoGradient)" stroke="url(#logoGradient)" stroke-width="2"/>
+  
+  <!-- Brain details -->
+  <path d="M85 60 C90 65, 95 70, 100 70 C105 70, 110 65, 115 60" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M85 80 C90 85, 95 90, 100 90 C105 90, 110 85, 115 80" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M85 100 C90 105, 95 110, 100 110 C105 110, 110 105, 115 100" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M85 120 C90 125, 95 130, 100 130 C105 130, 110 125, 115 120" stroke="white" stroke-width="2" fill="none"/>
+  
+  <!-- Lightning bolt -->
+  <path d="M110 35 L95 70 L105 75 L90 110 L110 85 L100 80 Z" 
+        fill="white" filter="url(#glow)"/>
+  
+  <!-- AI text -->
+  <text x="100" y="180" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#6366f1">AI</text>
+</svg> 

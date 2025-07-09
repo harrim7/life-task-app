@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Flex, Heading, Button, HStack, useColorModeValue } from '@chakra-ui/react';
+import { Box, Flex, Heading, Button, HStack, useColorModeValue, Icon } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { FiLogOut, FiUser, FiGrid } from 'react-icons/fi';
 
 interface HeaderProps {
   isLoggedIn?: boolean;
@@ -12,10 +13,23 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
   
-  const bgColor = useColorModeValue(isLandingPage ? '#fbf9f1' : 'white', 'gray.800');
+  // Updated color scheme using new theme colors
+  const bgColor = useColorModeValue(isLandingPage ? 'white' : 'white', 'gray.900');
   const textColor = useColorModeValue('gray.800', 'gray.100');
-  const buttonHoverBg = useColorModeValue('gray.100', 'gray.700');
-  const accentColor = useColorModeValue('yellow.500', 'yellow.400');
+  
+  // Dynamic styles for the scrolled header
+  const headerBgGradient = useColorModeValue(
+    scrolled 
+      ? 'linear(to-b, white, white)' 
+      : isLandingPage 
+        ? 'linear(to-b, white, brand.50)' 
+        : 'linear(to-b, white, white)',
+    'linear(to-b, gray.900, gray.800)'
+  );
+  
+  const headerBoxShadow = scrolled 
+    ? 'rgba(0, 0, 0, 0.05) 0px 1px 2px, rgba(0, 0, 0, 0.05) 0px 1px 4px' 
+    : 'none';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,75 +46,88 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
     };
   }, []);
 
-  // Determine padding based on whether we're on the landing page and if scrolled
+  // Dynamic padding based on page and scroll state
   const paddingTop = isLandingPage ? (scrolled ? 2 : 3) : 2;
   const paddingBottom = isLandingPage ? (scrolled ? 2 : 16) : 2;
-  const boxShadow = scrolled ? "md" : "none";
-  const transition = "all 0.3s ease";
+  const transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
 
-  // Scale down the header text when scrolled (70% of original size)
+  // Scale down the header text when scrolled
   const headingSize = isLandingPage && !scrolled ? "xl" : "md";
   const buttonSize = scrolled ? "sm" : "md";
-  const buttonPadding = scrolled ? "0.5rem 0.75rem" : undefined;
-
+  
   return (
     <Box 
       as="header" 
-      bg={bgColor} 
+      bgGradient={headerBgGradient}
       color={textColor} 
       px={4} 
       pt={paddingTop}
       pb={paddingBottom}
-      boxShadow={boxShadow}
+      boxShadow={headerBoxShadow}
       position="sticky"
       top={0}
       zIndex={1000}
       transition={transition}
-      height={scrolled ? "auto" : undefined}
+      borderBottomWidth={scrolled ? "1px" : "0px"}
+      borderBottomColor="gray.100"
     >
       <Flex 
         maxW="container.xl" 
         mx="auto" 
         justify="space-between"
-        align="flex-start" // Align items to the top of the header
+        align="flex-start"
       >
         <Heading 
           as={RouterLink} 
           to="/" 
           size={headingSize} 
-          fontWeight="bold" 
-          _hover={{ textDecoration: 'none' }}
+          fontWeight="semibold" 
+          color="brand.500"
+          _hover={{ 
+            color: 'brand.600',
+            transform: 'translateY(-1px)',
+          }}
           transition={transition}
-          mt={1} // Keep the heading near the top
+          mt={1}
+          letterSpacing="-0.5px"
         >
           LifeTask AI
         </Heading>
         
-        <HStack spacing={3} mt={1}> {/* Reduced spacing and kept near top */}
+        <HStack spacing={3} mt={1}>
           {isLoggedIn ? (
             <>
               <Button 
                 as={RouterLink} 
                 to="/dashboard" 
                 variant="ghost" 
-                color={textColor} 
-                _hover={{ bg: buttonHoverBg }}
+                color="gray.700"
+                leftIcon={<Icon as={FiGrid} />} 
+                _hover={{ 
+                  bg: 'brand.50',
+                  color: 'brand.600',
+                  transform: 'translateY(-1px)'
+                }}
                 size={buttonSize}
-                px={buttonPadding}
-                py={scrolled ? 1 : undefined}
+                fontWeight="medium"
                 transition={transition}
               >
                 Dashboard
               </Button>
               <Button 
                 variant="outline" 
-                color={textColor} 
-                borderColor="yellow.500" 
-                _hover={{ bg: 'yellow.500', color: 'gray.800' }} 
+                color="gray.700"
+                borderColor="brand.300"
+                leftIcon={<Icon as={FiLogOut} />}
+                _hover={{ 
+                  bg: 'brand.50',
+                  borderColor: 'brand.500',
+                  color: 'brand.600',
+                  transform: 'translateY(-1px)'
+                }}
                 onClick={onLogout}
                 size={buttonSize}
-                px={buttonPadding}
-                py={scrolled ? 1 : undefined}
+                fontWeight="medium"
                 transition={transition}
               >
                 Logout
@@ -112,11 +139,15 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
                 as={RouterLink} 
                 to="/login" 
                 variant="ghost" 
-                color={textColor} 
-                _hover={{ bg: buttonHoverBg }}
+                color="gray.700"
+                leftIcon={<Icon as={FiUser} />}
+                _hover={{ 
+                  bg: 'brand.50',
+                  color: 'brand.600',
+                  transform: 'translateY(-1px)'
+                }}
                 size={buttonSize}
-                px={buttonPadding}
-                py={scrolled ? 1 : undefined}
+                fontWeight="medium"
                 transition={transition}
               >
                 Login
@@ -124,16 +155,20 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
               <Button 
                 as={RouterLink} 
                 to="/register" 
-                variant="outline" 
-                color={textColor} 
-                borderColor="yellow.500" 
-                _hover={{ bg: 'yellow.500', color: 'gray.800' }}
+                variant="solid" 
+                colorScheme="brand"
+                _hover={{
+                  transform: 'translateY(-1px)',
+                  boxShadow: 'md',
+                }}
+                _active={{
+                  transform: 'translateY(0)',
+                }}
                 size={buttonSize}
-                px={buttonPadding}
-                py={scrolled ? 1 : undefined}
+                fontWeight="medium"
                 transition={transition}
               >
-                Register
+                Get Started
               </Button>
             </>
           )}

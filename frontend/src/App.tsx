@@ -25,75 +25,204 @@ import { TaskProvider } from './context/TaskContext';
 const theme = extendTheme({
   colors: {
     brand: {
-      50: '#fcf9f0',
-      100: '#f8f0d9',
-      200: '#f3e6c2',
-      300: '#e8d7a6',
-      400: '#d6c189',
-      500: '#c3a55c', // Primary muted gold
-      600: '#b08e4a',
-      700: '#9a7a3c',
-      800: '#7d622f',
-      900: '#5c4823',
+      50: '#f0f6ff',
+      100: '#dde8ff',
+      200: '#c1d3ff',
+      300: '#9ab7ff',
+      400: '#7093ff', 
+      500: '#4e6af1', // Primary blue
+      600: '#3a4ede',
+      700: '#2f3cbb',
+      800: '#283293',
+      900: '#1f2566',
     },
     accent: {
-      50: '#fdf8f2',
-      100: '#f9ecdd',
-      200: '#f2dcc1',
-      300: '#e7c8a0',
-      400: '#d5ae7d',
-      500: '#c2975a', // Bronze color
-      600: '#ad834c',
-      700: '#916c3e',
-      800: '#725430',
-      900: '#543d23',
+      50: '#fef4fd',
+      100: '#f9e2fc',
+      200: '#f3c8f9',
+      300: '#e99ff1',
+      400: '#de6de8',
+      500: '#c840d9', // Secondary purple
+      600: '#a92dbb',
+      700: '#862597',
+      800: '#641e73',
+      900: '#441a4f',
+    },
+    teal: {
+      50: '#e6fefe',
+      100: '#c7f9fa',
+      200: '#9cf1f5',
+      300: '#64e3ed',
+      400: '#37c8d3',
+      500: '#1aacbb', // Accent teal
+      600: '#12889a',
+      700: '#136b7a',
+      800: '#145563',
+      900: '#124754',
     },
     yellow: {
-      50: '#fffee0',
-      100: '#fffdc7',
-      200: '#fffaad',
-      300: '#fff794',
-      400: '#fff47a',
-      500: '#ffe600', // Bright yellow
-      600: '#e6cf00',
-      700: '#ccb800',
-      800: '#b3a100',
-      900: '#998a00',
-    },
-    lime: {
-      50: '#faffd9',
-      100: '#f8ffbf',
-      200: '#f6ffa5',
-      300: '#f5ff8c',
-      400: '#f3ff72',
-      500: '#f2ff26', // Lime yellow
-      600: '#d9e621',
-      700: '#c0cc1d',
-      800: '#a8b319',
-      900: '#8f9914',
+      50: '#fffde8',
+      100: '#fff9c0',
+      200: '#fff085',
+      300: '#ffe14a',
+      400: '#ffd026',
+      500: '#ffaf0f', // Warm orange
+      600: '#e17c00',
+      700: '#b65204',
+      800: '#94400b',
+      900: '#7a340d',
     },
     gray: {
-      50: '#f7f7f7',
-      100: '#eeeeee',
-      200: '#e2e2e2',
-      300: '#d0d0d0',
-      400: '#ababab',
-      500: '#8a8a8a',
-      600: '#636363',
-      700: '#505050',
-      800: '#323232',
-      900: '#121212',
+      50: '#f9fafb',
+      100: '#f0f2f5',
+      200: '#e2e7ed',
+      300: '#cfd8e3',
+      400: '#a9b9cc',
+      500: '#8599b2',
+      600: '#637994',
+      700: '#4d5e77',
+      800: '#354055',
+      900: '#1f2636',
+    },
+    success: {
+      50: '#e7f8f0',
+      100: '#c5eedd',
+      200: '#9ee2c7',
+      300: '#6ed3aa',
+      400: '#40c190',
+      500: '#1aad7a', // Success green
+      600: '#0e8d65',
+      700: '#0d6f50',
+      800: '#0e563f',
+      900: '#0c4132',
+    },
+    error: {
+      50: '#fef2f2',
+      100: '#fee2e2',
+      200: '#fecaca',
+      300: '#fca5a5',
+      400: '#f87171',
+      500: '#ef4444', // Error red
+      600: '#dc2626',
+      700: '#b91c1c',
+      800: '#991b1b',
+      900: '#7f1d1d',
     },
   },
   fonts: {
-    heading: '"Inter", sans-serif',
-    body: '"Inter", sans-serif',
+    heading: '"Inter", system-ui, sans-serif',
+    body: '"Inter", system-ui, sans-serif',
+  },
+  fontWeights: {
+    normal: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+  },
+  shadows: {
+    xs: '0 1px 2px rgba(16, 24, 40, 0.05)',
+    sm: '0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06)',
+    md: '0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06)',
+    lg: '0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03)',
+    xl: '0 20px 24px -4px rgba(16, 24, 40, 0.08), 0 8px 8px -4px rgba(16, 24, 40, 0.03)',
+  },
+  radii: {
+    none: '0',
+    sm: '0.375rem',
+    md: '0.5rem',
+    lg: '0.75rem',
+    xl: '1rem',
+    '2xl': '1.5rem',
+    full: '9999px',
+  },
+  components: {
+    Button: {
+      baseStyle: {
+        fontWeight: 'medium',
+        borderRadius: 'md',
+        _focus: {
+          boxShadow: '0 0 0 3px rgba(78, 106, 241, 0.25)',
+        },
+      },
+      variants: {
+        solid: {
+          bg: 'brand.500',
+          color: 'white',
+          _hover: {
+            bg: 'brand.600',
+            transform: 'translateY(-1px)',
+            boxShadow: 'md',
+          },
+          _active: {
+            bg: 'brand.700',
+            transform: 'translateY(0)',
+            boxShadow: 'sm',
+          },
+        },
+        outline: {
+          borderColor: 'brand.500',
+          color: 'brand.500',
+          _hover: {
+            bg: 'brand.50',
+            transform: 'translateY(-1px)',
+          },
+        },
+        ghost: {
+          color: 'gray.700',
+          _hover: {
+            bg: 'gray.100',
+            transform: 'translateY(-1px)',
+          },
+        },
+        secondary: {
+          bg: 'accent.500',
+          color: 'white',
+          _hover: {
+            bg: 'accent.600',
+            transform: 'translateY(-1px)',
+            boxShadow: 'md',
+          },
+        },
+      },
+    },
+    Card: {
+      baseStyle: {
+        container: {
+          bg: 'white',
+          borderRadius: 'lg',
+          boxShadow: 'sm',
+          overflow: 'hidden',
+          transition: 'all 0.2s ease',
+          _hover: {
+            boxShadow: 'md',
+            transform: 'translateY(-2px)',
+          },
+        },
+      },
+    },
+    Heading: {
+      baseStyle: {
+        fontWeight: 'semibold',
+        color: 'gray.900',
+      },
+    },
   },
   styles: {
     global: {
       body: {
         bg: 'gray.50',
         color: 'gray.800',
+      },
+      a: {
+        color: 'brand.500',
+        _hover: {
+          textDecoration: 'none',
+          color: 'brand.600',
+        },
+      },
+      'input:focus, select:focus, textarea:focus': {
+        borderColor: 'brand.500',
+        boxShadow: '0 0 0 1px rgba(78, 106, 241, 0.4)',
       },
     },
   },

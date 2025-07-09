@@ -367,7 +367,7 @@ const LandingPage: React.FC = () => {
               </Heading>
               
               <Text fontSize="xl" color={useColorModeValue('gray.600', 'gray.300')}>
-                LifeTask AI helps you break down complex tasks, prioritize effectively,
+                cavar helps you break down complex tasks, prioritize effectively,
                 and receive intelligent suggestions for improved productivity.
               </Text>
               
@@ -427,9 +427,9 @@ const LandingPage: React.FC = () => {
               borderColor="gray.200"
             >
               <Image 
-                src="https://via.placeholder.com/600x400/c3a55c/FFFFFF?text=LifeTask+AI+Dashboard" 
-                alt="LifeTask AI Dashboard Preview" 
-                fallbackSrc="https://via.placeholder.com/600x400/c3a55c/FFFFFF?text=LifeTask+AI+Dashboard"
+                src="https://via.placeholder.com/600x400/4e6af1/FFFFFF?text=cavar+Dashboard" 
+                alt="cavar Dashboard Preview" 
+                fallbackSrc="https://via.placeholder.com/600x400/4e6af1/FFFFFF?text=cavar+Dashboard"
               />
             </Box>
           </Flex>
@@ -442,7 +442,7 @@ const LandingPage: React.FC = () => {
           <VStack spacing={4} textAlign="center" maxW="container.md" mx="auto">
             <Heading as="h2" size="xl">Features designed for productivity</Heading>
             <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.400')}>
-              LifeTask AI combines powerful task management with artificial intelligence to help you accomplish more
+              cavar combines powerful task management with artificial intelligence to help you accomplish more
             </Text>
           </VStack>
           
@@ -491,7 +491,7 @@ const LandingPage: React.FC = () => {
               </Badge>
               <Heading as="h2" size="xl">AI-powered project breakdown</Heading>
               <Text fontSize="lg" color={useColorModeValue('gray.600', 'gray.400')}>
-                LifeTask AI uses advanced artificial intelligence to analyze your projects, 
+                cavar uses advanced artificial intelligence to analyze your projects, 
                 create a strategic breakdown, and guide you step-by-step to completion.
               </Text>
             </VStack>
@@ -784,7 +784,7 @@ const LandingPage: React.FC = () => {
               Ready to become more productive?
             </Heading>
             <Text fontSize="lg" color="gray.800">
-              Join thousands of users who have transformed their productivity with LifeTask AI.
+              Join thousands of users who have transformed their productivity with cavar.
               Get started for free today.
             </Text>
             <HStack spacing={4} pt={4}>
@@ -846,7 +846,7 @@ const LandingPage: React.FC = () => {
             textAlign={{ base: 'center', md: 'left' }}
           >
             <VStack align={{ base: 'center', md: 'flex-start' }} mb={{ base: 4, md: 0 }}>
-              <Heading size="md" color="yellow.500">LifeTask AI</Heading>
+              <Heading size="md" color="brand.500">cavar.ai</Heading>
               <Text fontSize="sm" color="gray.400">Transforming overwhelming projects into achievable steps</Text>
             </VStack>
             <HStack spacing={6}>
@@ -858,7 +858,7 @@ const LandingPage: React.FC = () => {
           </Flex>
           <Divider my={6} borderColor="gray.700" />
           <Text textAlign="center" fontSize="sm" color="gray.500">
-            &copy; {new Date().getFullYear()} LifeTask AI. All rights reserved.
+            &copy; {new Date().getFullYear()} cavar.ai. All rights reserved.
           </Text>
         </Container>
       </Box>

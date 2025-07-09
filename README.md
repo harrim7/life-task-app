@@ -1,6 +1,6 @@
-# LifeTask AI - AI-Powered Task Management
+# cavar - AI-Powered Task Management
 
-LifeTask AI is a modern task management application that leverages AI to help users break down large tasks into manageable subtasks, prioritize their to-do list, and receive intelligent suggestions for completing tasks effectively.
+cavar (www.cavar.ai) is a modern task management application that leverages AI to help users break down large tasks into manageable subtasks, prioritize their to-do list, and receive intelligent suggestions for completing tasks effectively.
 
 ## Features
 
@@ -38,8 +38,8 @@ LifeTask AI is a modern task management application that leverages AI to help us
 
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/life-task-ai.git
-   cd life-task-ai
+   git clone https://github.com/yourusername/cavar.git
+   cd cavar
    ```
 
 2. Install all dependencies
@@ -73,7 +73,7 @@ LifeTask AI is a modern task management application that leverages AI to help us
 
 2. Create a new Heroku app
    ```
-   heroku create lifetask-ai-app
+   heroku create cavar-app
    ```
 
 3. Use the deployment script

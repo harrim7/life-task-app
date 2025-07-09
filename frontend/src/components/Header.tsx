@@ -91,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn = false, onLogout = () => {}
           mt={1}
           letterSpacing="-0.5px"
         >
-          LifeTask AI
+          cavar
         </Heading>
         
         <HStack spacing={3} mt={1}>
